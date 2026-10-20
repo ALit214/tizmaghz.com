@@ -44,6 +44,13 @@
     });
   }
   var reduceMotion = media('(prefers-reduced-motion: reduce)');
+  // Move the page at once, without the smooth scrolling the style sheet asks for (works in every browser).
+  function jumpTo(y) {
+    var style = doc.documentElement.style, before = style.scrollBehavior;
+    style.scrollBehavior = 'auto';
+    window.scrollTo(0, y);
+    style.scrollBehavior = before;
+  }
 
   // ---------------------------------------------------------------- theme: System / Light / Dark
   var themeButtons = $all('[data-theme-choice]');
@@ -62,29 +69,55 @@
     });
   });
 
+  // ---------------------------------------------------------------- keyboard or pointer
+  // Whether the visitor is moving around with the keyboard (true) or by tapping, clicking or scrolling.
+  // The header stays in view while keyboard focus is in it; focus left on a tapped button doesn't count.
+  var keyboardUser = false;
+  on(doc, 'keydown', function (ev) { if (!/^(Shift|Control|Alt|Meta)$/.test(ev.key)) keyboardUser = true; }, true);
+  on(doc, 'pointerdown', function () { keyboardUser = false; }, true);
+  on(doc, 'wheel', function () { keyboardUser = false; }, { passive: true });
+  on(doc, 'touchstart', function () { keyboardUser = false; }, { passive: true });
+
   // ---------------------------------------------------------------- phone menu
+  // Closes with the menu button, a link in it, a tap or click anywhere outside it, Escape, or the
+  // keyboard focus moving out of it. The button tells screen readers whether it is open (aria-expanded);
+  // on screen its icon changes, and its label stays "Menu", so the header never changes width.
   var menuToggle = $('.menu-toggle');
   var menu = doc.getElementById('site-menu');
   var compact = media('(max-width: 759.98px)');
+  function menuOpen() { return !!(menu && menu.classList.contains('open')); }
   function setMenu(open) {
     if (!menuToggle || !menu) return;
     menu.classList.toggle('open', open);
     menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    $('.menu-label', menuToggle).textContent = open ? T.menuClose : T.menuOpen;
   }
-  on(menuToggle, 'click', function () { setMenu(!menu.classList.contains('open')); });
+  on(menuToggle, 'click', function () { setMenu(!menuOpen()); });
   on(menu, 'click', function (ev) {
     if (compact.matches && ev.target.closest && ev.target.closest('.site-nav a')) setMenu(false);
   });
+  // pointerdown rather than click: iPhones send no click for a tap on plain text.
+  on(doc, 'pointerdown', function (ev) {
+    if (menuOpen() && !menu.contains(ev.target) && !menuToggle.contains(ev.target)) setMenu(false);
+  }, true);
   on(doc, 'keydown', function (ev) {
-    if (ev.key === 'Escape' && menu && menu.classList.contains('open')) { setMenu(false); menuToggle.focus(); }
+    if ((ev.key === 'Escape' || ev.key === 'Esc') && menuOpen()) {
+      var inside = menu.contains(doc.activeElement);
+      setMenu(false);
+      if (inside) menuToggle.focus();
+    }
+  });
+  on(menu, 'focusout', function (ev) {
+    var to = ev.relatedTarget;
+    if (menuOpen() && to && !menu.contains(to) && to !== menuToggle) setMenu(false);
   });
   onMediaChange(compact, function () { setMenu(false); });
 
   // ---------------------------------------------------------------- the header slides away while reading down
-  (function () {
+  // and comes back on scrolling up. It stays near the top of the page, while the menu is open, and while
+  // keyboard focus is in it.
+  var Masthead = (function () {
     var mast = $('.masthead');
-    if (!mast) return;
+    if (!mast) return { settle: function () {}, bottom: function () { return 0; }, height: function () { return 0; } };
     var lastY = window.pageYOffset;
     var down = 0;
     var up = 0;
@@ -95,25 +128,69 @@
       if (y > lastY) { down += y - lastY; up = 0; } else if (y < lastY) { up += lastY - y; down = 0; }
       lastY = y;
       mast.classList.toggle('is-stuck', y > 8);
-      var keep = y < 140 || (menu && menu.classList.contains('open')) || mast.contains(doc.activeElement);
+      var keep = y < 140 || menuOpen() || (keyboardUser && mast.contains(doc.activeElement));
       if (keep || up > 12) mast.classList.remove('is-hidden');
       else if (down > 24) mast.classList.add('is-hidden');
     }
     on(window, 'scroll', function () { if (!ticking) { ticking = true; window.requestAnimationFrame(update); } }, { passive: true });
     on(mast, 'focusin', function () { mast.classList.remove('is-hidden'); });
     update();
+    return {
+      // After the page has been moved for the reader (a language switch): header in view, counting afresh.
+      settle: function () {
+        lastY = window.pageYOffset; down = 0; up = 0;
+        mast.classList.remove('is-hidden');
+        mast.classList.toggle('is-stuck', lastY > 8);
+      },
+      // Where the header ends, from the top of the window (0 while it is away).
+      bottom: function () { return mast.classList.contains('is-hidden') ? 0 : Math.max(0, mast.getBoundingClientRect().bottom); },
+      height: function () { return mast.offsetHeight; }
+    };
   })();
 
-  // ---------------------------------------------------------------- which section is on screen
+  // ---------------------------------------------------------------- where the reader is
+  // The reading position is the first line below the header: its section, the heading, paragraph or list
+  // item there (counted within the section: the three language versions are built alike, so the same
+  // count finds the same item in another language) and how far into that item.
   var SECTION_IDS = ['top', 'work', 'expertise', 'experience', 'explore', 'contact'];
-  function currentSection() {
-    var line = window.innerHeight * 0.35;
-    var found = 'top';
-    SECTION_IDS.forEach(function (id) {
-      var el = doc.getElementById(id);
-      if (el && el.getBoundingClientRect().top <= line) found = id;
-    });
-    return found;
+  var BLOCKS = 'h1, h2, h3, h4, p, li, fieldset, figure';
+  function readingPosition() {
+    var root = doc.documentElement;
+    if (window.pageYOffset < 2) return { at: 'start' };
+    if (window.pageYOffset + window.innerHeight >= root.scrollHeight - 2) return { at: 'end' };
+    var line = Masthead.bottom() + 8;
+    var first = null;
+    for (var s = 0; s < SECTION_IDS.length; s++) {
+      var section = doc.getElementById(SECTION_IDS[s]);
+      if (!section || section.getBoundingClientRect().bottom <= line) continue;
+      var blocks = $all(BLOCKS, section);
+      var pos = { section: SECTION_IDS[s], block: -1, frac: 0, gap: 0 };
+      for (var i = 0; i < blocks.length; i++) {
+        var r = blocks[i].getBoundingClientRect();
+        if (r.height < 2 || r.bottom <= line) continue;
+        if (r.top <= line) { pos.block = i; pos.frac = (line - r.top) / r.height; continue; }   // a smaller one inside may follow
+        if (pos.block < 0) { pos.block = i; pos.gap = r.top - line; }
+        break;
+      }
+      if (pos.block >= 0) return pos;
+      first = first || pos;              // only the space after this section's last item: look in the next one
+    }
+    return first || { at: 'start' };
+  }
+  // Where to scroll so that the same place is at the first line below the header (shown).
+  function scrollTarget(pos) {
+    var root = doc.documentElement;
+    if (pos.at === 'start') return 0;
+    if (pos.at === 'end') return Math.max(0, root.scrollHeight - window.innerHeight);
+    var section = doc.getElementById(pos.section);
+    if (!section) return null;
+    var el = pos.block >= 0 ? $all(BLOCKS, section)[pos.block] : null;
+    var r = el && el.getBoundingClientRect();
+    var frac = pos.frac || 0;
+    var gap = pos.gap || 0;
+    if (!r || r.height < 2) { r = section.getBoundingClientRect(); frac = 0; gap = 0; }   // not here: its section
+    var y = r.top + window.pageYOffset + (frac ? frac * r.height : -gap) - (Masthead.height() + 8);
+    return Math.max(0, Math.round(y));
   }
 
   // ---------------------------------------------------------------- logo animation in the specimen dish
@@ -150,6 +227,7 @@
     var frameCallbacks = true;      // the browser announces each new video frame (until it stays silent)
     var lastAnnounced = 0;          // when the browser last announced a new video frame
     var emptyChecked = false;       // the canvas has been checked once for an empty picture
+    var stillReady = false;         // the finished logo's picture is loaded and decoded: pausing shows it at once
 
     function transparentVideoWorks() {
       if (!video || !video.canPlayType) return false;
@@ -168,10 +246,28 @@
     function layer() { return mode === 'canvas' ? canvas : mode === 'video' ? video : anim; }
     function showOnly(el) { [still, anim, animStill, video, canvas].forEach(function (x) { if (x) x.hidden = x !== el; }); }
     function picture(el) { if (!el.getAttribute('src')) el.src = el.getAttribute('data-src'); showOnly(el); }
+    function loaded(el) { return el.complete && el.naturalWidth > 0; }
+    // The picture a pause shows: the blended fallback pauses on its own finished logo, so its look doesn't change.
+    function pausePicture() { return mode === 'image' ? animStill : still; }
+    // Once the animation runs, fetch and decode that picture, so the first pause shows it without a wait.
+    function prepareStill() {
+      var el = pausePicture();
+      if (!el.getAttribute('src')) el.src = el.getAttribute('data-src');
+      var done = function () { if (el === pausePicture() && loaded(el)) stillReady = true; };
+      if (el.decode) el.decode().then(done, function () { /* not ready: a pause waits for it */ });
+      else on(el, 'load', done);
+    }
     function showStill() {
       if (player && !player.paused) player.pause();
-      // The blended fallback pauses on its own finished logo, so its look doesn't change.
-      picture(mode === 'image' && userChoice === 'pause' ? animStill : still);
+      var el = mode === 'image' && userChoice === 'pause' ? animStill : still;
+      // Pausing the fallback before its picture has arrived: keep the animation until the picture can be shown.
+      if (el === animStill && !anim.hidden && !loaded(el)) {
+        if (!el.getAttribute('src')) el.src = el.getAttribute('data-src');
+        var swap = function () { if (!wantsMotion()) showOnly(el); };
+        if (el.decode) el.decode().then(swap, swap); else on(el, 'load', swap);
+        return;
+      }
+      picture(el);
     }
     function startImage() {
       showOnly(anim);
@@ -179,7 +275,12 @@
       anim.src = anim.getAttribute('data-src');
     }
     function playVideo() {
-      if (ready) showOnly(layer());     // before the first frame is ready, keep showing what is there
+      // Before the first frame is ready, keep showing what is there; after a pause, wait until the video
+      // has reached the finished logo it is to carry on from.
+      if (ready) {
+        if (player.seeking) on(player, 'seeked', function () { if (wantsMotion() && ready) showOnly(layer()); }, { once: true });
+        else showOnly(layer());
+      }
       var p = player.play();
       // Autoplay switched off (for example in low-power mode): use the blended fallback, which still moves.
       if (p && p.catch) p.catch(function (err) { if (err && err.name === 'NotAllowedError') useImageInstead(); });
@@ -194,7 +295,12 @@
       var t = player.currentTime;
       if (t > HOLD_START + 0.1 && t < HOLD_END - 0.1) return;        // already showing the finished logo
       if (HOLD_END > HOLD_START && canJumpTo(HOLD_START + 0.4)) {
-        try { player.currentTime = HOLD_START + 0.4; return; } catch (e) { /* fall through */ }
+        try {
+          player.currentTime = HOLD_START + 0.4;
+          // Moving the video there can take a moment: meanwhile the finished logo's picture, when ready.
+          if (stillReady) showOnly(still);
+          return;
+        } catch (e) { /* fall through */ }
       }
       // This video can't jump to a point in time: show the finished logo as a picture; Play starts again.
       try { player.currentTime = 0; } catch (e) { /* ignore */ }
@@ -214,6 +320,7 @@
       ready = false;
       loading = false;
       drawing = false;
+      stillReady = false;
       render();
     }
     function useImageInstead() { if (mode !== 'image') switchTo('image'); }
@@ -358,7 +465,7 @@
       }, 2500);
       if (mode === 'image') {
         var loader = new Image();
-        loader.onload = function () { ready = true; clearTimeout(fallbackTimer); if (wantsMotion()) startImage(); };
+        loader.onload = function () { ready = true; clearTimeout(fallbackTimer); if (wantsMotion()) startImage(); setTimeout(prepareStill, 400); };
         loader.onerror = function () { clearTimeout(fallbackTimer); showStill(); };
         loader.src = anim.getAttribute('data-src');
         return;
@@ -403,6 +510,7 @@
       function reveal() {
         if (ready || el !== player) return;
         ready = true;
+        setTimeout(prepareStill, 400);
         if (mode === 'canvas') drawFrame();
         if (wantsMotion() && onScreen && !doc.hidden) {
           showOnly(layer());
@@ -926,16 +1034,38 @@
     return { current: function () { return current; }, show: show };
   })();
 
+  // ---------------------------------------------------------------- back to the top
+  // "Back to top" and the name in the header go to the very top of the page. (The browser's own jump
+  // stops at the opening section, under the header.) Keyboard focus moves to the name.
+  $all('a[href="#top"]').forEach(function (a) {
+    on(a, 'click', function (ev) {
+      if (ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+      ev.preventDefault();
+      setMenu(false);
+      var name = doc.getElementById('name');
+      if (name) {
+        if (!name.hasAttribute('tabindex')) name.setAttribute('tabindex', '-1');
+        try { name.focus({ preventScroll: true }); } catch (e) { name.focus(); }
+      }
+      if (reduceMotion.matches) jumpTo(0);
+      else try { window.scrollTo({ top: 0, left: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+      try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ }
+    });
+  });
+
   // ---------------------------------------------------------------- language switcher: remember the choice, keep the place
+  // The place (reading position, open activity and its step) is handed to the other page in this tab's
+  // session storage, and that page puts it back. If session storage is blocked, the link points to the section.
   $all('[data-lang-link]').forEach(function (a) {
     on(a, 'click', function () {
       store.set('lang', a.getAttribute('data-lang-link'));
-      var section = currentSection();
+      var pos = readingPosition();
       var key = Explore.current();
-      var state = { section: section, activity: key, explore: key && activities[key] ? activities[key].state() : null };
-      session.set('resume', JSON.stringify(state));
+      var state = JSON.stringify({ pos: pos, activity: key, explore: key && activities[key] ? activities[key].state() : null });
+      session.set('resume', state);
       var base = a.getAttribute('href').split('#')[0];
-      var hash = section === 'explore' && key ? 'act-' + key : (section === 'top' ? '' : section);
+      var hash = '';
+      if (session.get('resume') !== state) hash = pos.section === 'explore' && key ? 'act-' + key : (pos.section === 'top' ? '' : pos.section);
       a.setAttribute('href', base + (hash ? '#' + hash : ''));
     });
   });
@@ -950,11 +1080,22 @@
       Explore.show(state.activity);
       if (state.explore && activities[state.activity]) activities[state.activity].restore(state.explore);
     }
-    var targetId = state.section === 'explore' && state.activity ? 'act-' + state.activity : state.section;
-    var target = targetId && targetId !== 'top' ? doc.getElementById(targetId) : null;
-    if (target) {
-      var y = Math.max(0, target.getBoundingClientRect().top + window.pageYOffset - 24);
-      try { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, y); }
+    var pos = state.pos || (state.section ? { section: state.section, block: -1 } : null);   // (or from version 1.00)
+    if (!pos) return;
+    var moved = false;
+    function place() {
+      if (moved) return;
+      var y = scrollTarget(pos);
+      if (y === null) return;
+      if (Math.abs(y - window.pageYOffset) > 1) jumpTo(y);
+      Masthead.settle();
     }
+    place();
+    // Fonts and pictures that arrive later can shift the text: put the place back, until the reader moves.
+    ['pointerdown', 'wheel', 'touchstart', 'keydown'].forEach(function (type) {
+      on(window, type, function () { moved = true; }, { passive: true });
+    });
+    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(place);
+    on(window, 'load', function () { place(); setTimeout(place, 300); });
   })();
 })();
