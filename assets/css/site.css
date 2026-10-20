@@ -8,6 +8,7 @@
   --paper: #FFFFFF;       /* alternate bands and activity panels */
   --ink: #17122B;         /* text and outlines */
   --muted: #4D4565;       /* secondary text */
+  --ink-soft: #322C48;    /* between ink and muted: the clinic's specialty, after its name */
   --rule: rgba(23, 18, 43, 0.22);
   --tint: rgba(23, 18, 43, 0.05);
   --press-bg: #17122B;
@@ -36,6 +37,7 @@
   --size-year: clamp(48px, 2.6vw + 30px, 64px); --w-year: 500;
   --size-focus: clamp(19px, 0.5vw + 16px, 22px);
   --size-lead: clamp(18px, 0.5vw + 15px, 21px); --lh-lead: 1.6;
+  --size-line: clamp(22px, 0.9vw + 17px, 28px);   /* the short lines under the title line and the section headings */
   --size-brand: 22px;    --w-brand: 600;
   --w-menu: 600;
   --track-head: -0.01em;
@@ -47,7 +49,7 @@
 /* ------------------------------------------------------------ dark theme (same tokens) */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #16112A; --paper: #1D1736; --ink: #F3F0FA; --muted: #BDB5D2;
+    --bg: #16112A; --paper: #1D1736; --ink: #F3F0FA; --muted: #BDB5D2; --ink-soft: #D8D3E6;
     --rule: rgba(243, 240, 250, 0.22); --tint: rgba(243, 240, 250, 0.06);
     --press-bg: #F3F0FA; --press-fg: #16112A; --solid-hover: #D8D0EE; --focus: #C3A6FF;
     --teal: #2BB8AE;    --teal-text: #5FD6CC;    --teal-soft: #123B3D;    --teal-chip: #2BB8AE;    --teal-chip-fg: #16112A;
@@ -59,7 +61,7 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #16112A; --paper: #1D1736; --ink: #F3F0FA; --muted: #BDB5D2;
+  --bg: #16112A; --paper: #1D1736; --ink: #F3F0FA; --muted: #BDB5D2; --ink-soft: #D8D3E6;
   --rule: rgba(243, 240, 250, 0.22); --tint: rgba(243, 240, 250, 0.06);
   --press-bg: #F3F0FA; --press-fg: #16112A; --solid-hover: #D8D0EE; --focus: #C3A6FF;
   --teal: #2BB8AE;    --teal-text: #5FD6CC;    --teal-soft: #123B3D;    --teal-chip: #2BB8AE;    --teal-chip-fg: #16112A;
@@ -278,6 +280,11 @@ main:focus, .hero-name:focus { outline: none; }
 }
 .hero-name span { display: block; }
 .hero-focus { margin: 26px 0 0; max-width: 24em; font-size: var(--size-focus); line-height: 1.35; font-weight: 500; }
+/* The short line under the title line, in grey (Ali's choice); it changes on each visit (see below). */
+.hero-line {
+  margin: 14px 0 0; max-width: 24em; color: var(--muted);
+  font-family: var(--font-display); font-weight: 500; font-size: var(--size-line); line-height: 1.28; text-wrap: balance;
+}
 .open-to { display: flex; align-items: flex-start; gap: 10px 14px; margin-top: 22px; max-width: 660px; }
 .open-to-label {
   flex: none; margin: 0; padding-top: 6px;
@@ -340,6 +347,40 @@ main:focus, .hero-name:focus { outline: none; }
   font-size: var(--size-h2); line-height: var(--lh-h2); letter-spacing: var(--track-head);
 }
 .section-head p { margin: 0; max-width: 32em; color: var(--muted); }
+/* The heading and its short line, which changes on each visit; the same grey type as the opening line. */
+.section-title { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.section-head .section-line {
+  max-width: 30em; font-family: var(--font-display); font-weight: 500;
+  font-size: var(--size-line); line-height: 1.28; text-wrap: balance;
+}
+
+/* ------------------------------------------------------------ lines that change on each visit */
+/* Each place holds all its lines and only one shows. Without scripts, and to search engines, it is the
+   first (the main line). The script in the page's head numbers the visit and marks the page with the
+   remainder of that number divided by 2, 3, 4 and 5 (data-pick2 to data-pick5); these rules then show
+   the matching line, so a place with three lines shows its first, second, third, first... line on
+   visits 1, 2, 3, 4... The number stays the same while the tab is open, also across languages. */
+.rotating > :not(:first-child) { display: none; }
+:root[data-pick2="1"] .rotating[data-count="2"] > :nth-child(1),
+:root[data-pick3="1"] .rotating[data-count="3"] > :nth-child(1),
+:root[data-pick3="2"] .rotating[data-count="3"] > :nth-child(1),
+:root[data-pick4="1"] .rotating[data-count="4"] > :nth-child(1),
+:root[data-pick4="2"] .rotating[data-count="4"] > :nth-child(1),
+:root[data-pick4="3"] .rotating[data-count="4"] > :nth-child(1),
+:root[data-pick5="1"] .rotating[data-count="5"] > :nth-child(1),
+:root[data-pick5="2"] .rotating[data-count="5"] > :nth-child(1),
+:root[data-pick5="3"] .rotating[data-count="5"] > :nth-child(1),
+:root[data-pick5="4"] .rotating[data-count="5"] > :nth-child(1) { display: none; }
+:root[data-pick2="1"] .rotating[data-count="2"] > :nth-child(2),
+:root[data-pick3="1"] .rotating[data-count="3"] > :nth-child(2),
+:root[data-pick3="2"] .rotating[data-count="3"] > :nth-child(3),
+:root[data-pick4="1"] .rotating[data-count="4"] > :nth-child(2),
+:root[data-pick4="2"] .rotating[data-count="4"] > :nth-child(3),
+:root[data-pick4="3"] .rotating[data-count="4"] > :nth-child(4),
+:root[data-pick5="1"] .rotating[data-count="5"] > :nth-child(2),
+:root[data-pick5="2"] .rotating[data-count="5"] > :nth-child(3),
+:root[data-pick5="3"] .rotating[data-count="5"] > :nth-child(4),
+:root[data-pick5="4"] .rotating[data-count="5"] > :nth-child(5) { display: inline; }
 
 /* ------------------------------------------------------------ 2. selected work */
 .entries { margin-top: 40px; }
@@ -415,7 +456,14 @@ main:focus, .hero-name:focus { outline: none; }
 @media (min-width: 760px) { .role-dates:empty { display: block; } }
 .role-body { flex: 1 1 420px; min-width: 0; }
 .role h4 { margin: 0; font-family: var(--font-ui); font-size: 20px; font-weight: 700; line-height: 1.35; }
-.role-place { margin: 4px 0 0; font-weight: 600; }
+/* A place's lines are closer together than the text's, so a place and the note after it read as one (Ali's
+   request); the margins keep the space above and below as before. */
+.role-place { margin: 6px 0 7px; font-weight: 600; line-height: 1.4; }
+[dir="rtl"] .role-place { margin: 7px 0 8px; line-height: 1.6; }
+.role-place-note { display: inline-block; font-size: 0.9em; font-weight: 400; color: var(--ink-soft); }
+/* (for example the clinic's specialty, in brackets: a little smaller, and a shade between the name and the
+   description under it (Ali's choice); kept in one piece, so on a phone it moves to its own line rather
+   than breaking after its first word) */
 .role-desc { margin: 6px 0 0; color: var(--muted); }
 .background-list li { display: flex; align-items: baseline; gap: 14px; padding-block: 16px; border-bottom: 1.5px solid var(--rule); }
 .background-list li::before {
@@ -500,6 +548,14 @@ main:focus, .hero-name:focus { outline: none; }
 .feedback[data-result="right"] { background: var(--teal-soft); }
 .feedback[data-result="wrong"] { background: var(--coral-soft); }
 .verdict { font-weight: 700; }
+/* The burst of cells for a right answer (site.js): small cells in the five colours, like those in the
+   specimen dish. The layer covers the window, lets every tap through, and is removed after the burst. */
+.burst { position: fixed; inset: 0; z-index: 40; overflow: hidden; pointer-events: none; }
+.burst-cell {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle at 34% 34%, rgba(255, 255, 255, 0.85) 0 18%, rgba(255, 255, 255, 0) 30%), var(--tone);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
 .cases { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 14px; }
 .case { padding: 18px 20px; border-radius: 20px; background: var(--bg); }
 .case-text { margin: 0; font-weight: 500; }
@@ -643,21 +699,76 @@ main:focus, .hero-name:focus { outline: none; }
 .to-top { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-family: var(--font-ui); font-weight: 600; color: var(--ink); }
 
 /* ------------------------------------------------------------ page not found */
-/* The specimen dish with its short animation, then the three languages: stacked on phones, side by side
-   on wider screens, each centred so the left-to-right and right-to-left texts sit evenly. */
-.nf-main { padding-block: clamp(28px, 5vw, 64px) clamp(40px, 7vw, 88px); display: grid; gap: clamp(24px, 4vw, 40px); justify-items: center; }
-.nf-logo { display: block; width: 64px; height: 64px; justify-self: start; }
-.nf-dish { position: relative; width: min(360px, 80vw); max-width: 100%; aspect-ratio: 1 / 1; }
+/* The name and the language and theme buttons on top; then the specimen dish with its short animation,
+   and the message in the visitor's language, centred, with buttons to the home page and to the five
+   sections. The language is chosen before the page is drawn (data-nf on the page). Without scripts the
+   three languages show, side by side on wider screens, each with its own buttons. */
+.nf-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-block: 16px; }
+.nf-top .controls { margin-inline-start: auto; }
+.nf-langs button {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 13px;
+  border: 1.5px solid var(--ink); border-radius: 999px; background: transparent; color: var(--ink); cursor: pointer;
+  font-family: var(--font-latin); font-size: 14px; font-weight: 600; white-space: nowrap;
+}
+.nf-langs button:hover { background: var(--tint); }
+.nf-langs button[aria-pressed="true"] { background: var(--press-bg); color: var(--press-fg); border-color: var(--press-bg); }
+.no-js .nf-name:not([lang="en"]),
+:root[data-nf="en"] .nf-name:not([lang="en"]), :root[data-nf="fa"] .nf-name:not([lang="fa"]), :root[data-nf="ar"] .nf-name:not([lang="ar"]),
+:root[data-nf="en"] .nf-block:not([lang="en"]), :root[data-nf="fa"] .nf-block:not([lang="fa"]), :root[data-nf="ar"] .nf-block:not([lang="ar"]) { display: none; }
+.nf-main { padding-block: clamp(8px, 2vw, 24px) clamp(40px, 7vw, 88px); display: grid; gap: clamp(24px, 4vw, 40px); justify-items: center; }
+.nf-dish { position: relative; width: min(340px, 76vw); max-width: 100%; aspect-ratio: 1 / 1; }
 .nf-dish .dish-art, .nf-cells { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.nf-blocks { display: grid; gap: 36px; width: 100%; text-align: center; }
+.nf-blocks { display: grid; gap: 48px; width: 100%; text-align: center; }
+:root[data-nf] .nf-blocks { max-width: 760px; }
+@media (max-width: 599.98px) {
+  /* Phones (Ali's choice, the same in all three languages): the name on the first row, the theme buttons
+     on the second, the language buttons on the third, all lined up at the start. */
+  .nf-top { gap: 12px; }
+  .js .nf-top .controls { display: contents; }
+  .nf-top .theme-switch { order: 2; flex: 1 1 100%; }
+  .nf-top .theme-switch button { width: 40px; height: 40px; }
+  .nf-top .nf-langs { order: 3; flex: 1 1 100%; }
+}
 .nf-block { min-width: 0; }
 .nf-block h1 { margin: 0; font-family: var(--font-display); font-weight: var(--w-h2); font-size: clamp(32px, 3.4vw, 46px); line-height: 1.2; text-wrap: balance; }
 .nf-block p { margin: 10px 0 0; }
-.nf-block .btn { margin-top: 8px; }
+.nf-block .btn-solid { margin-top: 8px; }
+.nf-block p.nf-more { margin: 32px 0 12px; font-family: var(--font-ui); font-size: 15px; font-weight: 600; color: var(--muted); }
+.nf-sections { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+/* Each button starts with a small cell in its section's colour, like the cells that spell 404 in the dish
+   (Ali's choice): a nucleus, a membrane and a soft halo. On phones an arrow ends each button. */
+.nf-sections .btn { gap: 12px; }
+.nf-sections .btn::before {
+  content: ''; flex: none; width: 16px; height: 16px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 34%, rgba(255, 255, 255, 0.85) 0 2.4px, rgba(255, 255, 255, 0) 3.4px), var(--tone);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 0 0 3.5px var(--tone-soft);
+}
+.nf-sections .nf-go { display: none; }
+/* One button per row, the word at the start and an arrow at the end (Ali's choices): on phones, and at
+   every width without JavaScript, so the three languages' buttons line up with each other. */
+.no-js .nf-sections { display: grid; grid-template-columns: min(100%, 280px); justify-content: center; }
+.no-js .nf-sections li { display: flex; }
+.no-js .nf-sections .btn { flex: 1; justify-content: flex-start; gap: 14px; min-height: 54px; padding-inline: 22px 20px; text-align: start; font-size: 16px; }
+.no-js .nf-sections .nf-go { display: block; flex: none; margin-inline-start: auto; opacity: 0.75; }
+@media (max-width: 599.98px) {
+  .nf-sections { display: grid; grid-template-columns: min(100%, 280px); justify-content: center; }
+  .nf-sections li { display: flex; }
+  .nf-sections .btn { flex: 1; justify-content: flex-start; gap: 14px; min-height: 54px; padding-inline: 22px 20px; text-align: start; font-size: 16px; }
+  .nf-sections .nf-go { display: block; flex: none; margin-inline-start: auto; opacity: 0.75; }
+}
 .nf-block[dir="rtl"] { --font-display: 'Noto Kufi Arabic', 'Vazirmatn', Tahoma, sans-serif; --font-ui: 'Noto Kufi Arabic', 'Vazirmatn', Tahoma, sans-serif; --w-h2: 800; font-family: 'Vazirmatn', Tahoma, sans-serif; line-height: 1.9; }
 @media (min-width: 900px) {
-  .nf-blocks { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
-  .nf-block h1 { font-size: clamp(28px, 2.6vw, 40px); }
+  :root[data-nf] .nf-blocks { max-width: 880px; }
+  :root[data-nf] .nf-block h1 { font-size: clamp(36px, 3.4vw, 48px); }
+}
+@media (min-width: 1024px) {
+  /* Without scripts, the three languages sit side by side on wider screens, each with its five buttons
+     one per row. (Narrower screens show the languages one under another.) */
+  .no-js .nf-blocks { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; }
+  .no-js .nf-block h1 { font-size: clamp(28px, 2.6vw, 40px); }
+  /* The heading, the message, the home button, "Or go straight to:" and the five buttons share rows across
+     the three columns, so the buttons line up even though Persian and Arabic lines are taller. */
+  .no-js .nf-block { display: grid; grid-row: span 5; grid-template-rows: subgrid; align-content: start; }
 }
 
 /* ------------------------------------------------------------ motion preferences */

@@ -1,7 +1,8 @@
 /* Ali TizMaghz — site behaviour. No libraries, no tracking.
    Everything on the page can be read without this script; it adds the theme and menu controls,
    the logo animation, the copy button and the Explore & learn activities.
-   Choices are remembered in this browser only (theme, language, sound), when the browser allows it. */
+   Choices are remembered in this browser only (theme, language, sound), when the browser allows it,
+   and so is the visit number that picks the lines that change on each visit (set in the page head). */
 (function () {
   'use strict';
 
@@ -698,6 +699,43 @@
     return copy.textContent.replace(/\s+/g, ' ').trim();
   }
 
+  // A burst of cells for a right answer: about 0.6 seconds, in time with the sound. Small cells in the
+  // site's five colours spring from the answer's tick (or its middle) and fade, like the cells in the
+  // specimen dish. Nothing moves with reduced motion, and the "Correct." text always shows.
+  var reduceMotion = media('(prefers-reduced-motion: reduce)');
+  function burst(el) {
+    if (!el || reduceMotion.matches || !el.animate) return;
+    var mark = $('.mark-right', el);
+    var r = (mark && mark.getBoundingClientRect().width ? mark : el).getBoundingClientRect();
+    var x = r.left + r.width / 2;
+    var y = r.top + r.height / 2;
+    var layer = doc.createElement('div');
+    layer.className = 'burst';
+    layer.setAttribute('aria-hidden', 'true');
+    var tones = ['teal', 'coral', 'magenta', 'gold', 'violet'];
+    var n = 14;
+    for (var k = 0; k < n; k++) {
+      var cell = doc.createElement('span');
+      var size = 7 + (k * 7) % 6;                        // 7 to 12 px, the same pattern every time
+      var angle = (k / n) * Math.PI * 2 + (k % 2 ? 0.18 : -0.12);
+      var dist = 30 + (k * 13) % 26;                     // 30 to 55 px
+      var dx = Math.cos(angle) * dist;
+      var dy = Math.sin(angle) * dist;
+      cell.className = 'burst-cell tone-' + tones[k % 5];
+      cell.style.width = cell.style.height = size + 'px';
+      cell.style.left = (x - size / 2) + 'px';
+      cell.style.top = (y - size / 2) + 'px';
+      layer.appendChild(cell);
+      cell.animate([
+        { transform: 'translate(0, 0) scale(0.3)', opacity: 1 },
+        { transform: 'translate(' + (dx * 0.72) + 'px, ' + (dy * 0.72) + 'px) scale(1)', opacity: 1, offset: 0.55 },
+        { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(0.7)', opacity: 0 }
+      ], { duration: 600, delay: (k % 3) * 20, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)', fill: 'both' });
+    }
+    doc.body.appendChild(layer);
+    setTimeout(function () { if (layer.parentNode) layer.parentNode.removeChild(layer); }, 760);
+  }
+
   // A verdict ("Correct." / "Not quite.") shown before an explanation that is already on the page.
   function showFeedback(box, right) {
     box.setAttribute('data-result', right ? 'right' : 'wrong');
@@ -836,6 +874,7 @@
         });
         showFeedback(feedback, right);
         Sound.play(right ? 'right' : 'again');
+        if (right) burst(c);
       });
     });
   });
@@ -904,6 +943,7 @@
       nextBtn.hidden = false;
       announce(text);
       Sound.play(right ? 'right' : 'again');
+      if (right) burst(b);
     });
     on(nextBtn, 'click', function () {
       index += 1;
@@ -976,6 +1016,7 @@
         showFeedback($('.feedback', q), right);
         checked = true;
         Sound.play(right ? 'right' : 'again');
+        if (right) burst($('.option[data-option="' + chosen.value + '"]', q));
         render();
         // The answers are now locked. If the keyboard was on one of them, move it to the button that
         // goes on, so it isn't lost.

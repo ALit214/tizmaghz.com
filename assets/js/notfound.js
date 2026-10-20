@@ -171,3 +171,65 @@
   window.notFoundAnimation = { play: start };
   start();
 })();
+
+/* Page not found: the language and theme buttons. The page's head has already chosen the language (from
+   the address, the remembered choice or the browser) before anything was drawn; these buttons switch it in
+   place and remember the choice, as the buttons on the rest of the site do. */
+(function () {
+  'use strict';
+  var doc = document;
+  var root = doc.documentElement;
+  var dataEl = doc.getElementById('nf-data');
+  if (!dataEl) return;
+  var DATA = JSON.parse(dataEl.textContent);
+  function store(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* storage blocked: carry on */ } }
+  function each(sel, fn) { Array.prototype.forEach.call(doc.querySelectorAll(sel), fn); }
+  function show(lang) {
+    var d = DATA[lang];
+    if (!d) return;
+    root.setAttribute('data-nf', lang);
+    root.lang = lang;
+    root.dir = d.dir;
+    doc.title = d.title;
+    var home = doc.querySelector('[data-nf-home]');
+    if (home) home.setAttribute('href', d.home);
+    each('[data-nf-choose]', function (b) {
+      var k = b.getAttribute('data-nf-choose');
+      b.setAttribute('aria-pressed', k === lang ? 'true' : 'false');
+      var says = b.querySelector('[data-nf-says]');
+      if (says) says.textContent = ' ' + d.languageNames[k];      // for screen readers, in this language
+    });
+    var langs = doc.querySelector('.nf-langs');
+    if (langs) langs.setAttribute('aria-label', d.languageLabel);
+    var themes = doc.querySelector('.theme-switch');
+    if (themes) themes.setAttribute('aria-label', d.themeLabel);
+    each('[data-theme-choice]', function (b, k) {
+      b.setAttribute('aria-label', d.themes[k]);
+      b.setAttribute('title', d.themes[k]);
+    });
+  }
+  each('[data-nf-choose]', function (b) {
+    b.addEventListener('click', function () {
+      var lang = b.getAttribute('data-nf-choose');
+      store('lang', lang);
+      show(lang);
+    });
+  });
+  // Theme: System, Light or Dark, remembered as on the rest of the site.
+  function showTheme(choice) {
+    each('[data-theme-choice]', function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-theme-choice') === choice ? 'true' : 'false'); });
+  }
+  var saved = null;
+  try { saved = window.localStorage.getItem('theme'); } catch (e) { /* ignore */ }
+  showTheme(saved === 'light' || saved === 'dark' ? saved : 'system');
+  each('[data-theme-choice]', function (b) {
+    b.addEventListener('click', function () {
+      var choice = b.getAttribute('data-theme-choice');
+      if (choice === 'light' || choice === 'dark') root.setAttribute('data-theme', choice);
+      else root.removeAttribute('data-theme');
+      store('theme', choice);
+      showTheme(choice);
+    });
+  });
+  show(root.getAttribute('data-nf') || 'en');
+})();
