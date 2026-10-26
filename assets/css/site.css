@@ -15,6 +15,8 @@
   --press-fg: #F7F6FB;
   --solid-hover: #3A2D66;
   --focus: #6527D9;
+  --select-bg: #A884FF;   /* selected text: a bright lavender highlight, the same as in the dark theme */
+  --select-fg: #17122B;   /* ink on it: 6.4 to 1 */
 
   --teal: #0E8A83;    --teal-text: #0A6660;    --teal-soft: #D2F0EC;    --teal-chip: #0B6E68;   --teal-chip-fg: #FFFFFF;
   --coral: #E2553F;   --coral-text: #A8321F;   --coral-soft: #FBDDD6;   --coral-chip: #E2553F;  --coral-chip-fg: #17122B;
@@ -52,6 +54,7 @@
     --bg: #16112A; --paper: #1D1736; --ink: #F3F0FA; --muted: #BDB5D2; --ink-soft: #D8D3E6;
     --rule: rgba(243, 240, 250, 0.22); --tint: rgba(243, 240, 250, 0.06);
     --press-bg: #F3F0FA; --press-fg: #16112A; --solid-hover: #D8D0EE; --focus: #C3A6FF;
+    --select-bg: #A884FF; --select-fg: #16112A;   /* the violet chip's colours: 6.5 to 1 */
     --teal: #2BB8AE;    --teal-text: #5FD6CC;    --teal-soft: #123B3D;    --teal-chip: #2BB8AE;    --teal-chip-fg: #16112A;
     --coral: #FF7A64;   --coral-text: #FF9C8A;   --coral-soft: #47231F;   --coral-chip: #FF7A64;   --coral-chip-fg: #16112A;
     --magenta: #E3559F; --magenta-text: #F08BC0; --magenta-soft: #42193A; --magenta-chip: #E3559F; --magenta-chip-fg: #16112A;
@@ -64,6 +67,7 @@
   --bg: #16112A; --paper: #1D1736; --ink: #F3F0FA; --muted: #BDB5D2; --ink-soft: #D8D3E6;
   --rule: rgba(243, 240, 250, 0.22); --tint: rgba(243, 240, 250, 0.06);
   --press-bg: #F3F0FA; --press-fg: #16112A; --solid-hover: #D8D0EE; --focus: #C3A6FF;
+  --select-bg: #A884FF; --select-fg: #16112A;   /* the violet chip's colours: 6.5 to 1 */
   --teal: #2BB8AE;    --teal-text: #5FD6CC;    --teal-soft: #123B3D;    --teal-chip: #2BB8AE;    --teal-chip-fg: #16112A;
   --coral: #FF7A64;   --coral-text: #FF9C8A;   --coral-soft: #47231F;   --coral-chip: #FF7A64;   --coral-chip-fg: #16112A;
   --magenta: #E3559F; --magenta-text: #F08BC0; --magenta-soft: #42193A; --magenta-chip: #E3559F; --magenta-chip-fg: #16112A;
@@ -125,7 +129,12 @@ html { font-variation-settings: 'opsz' var(--opsz-text, 8); }
 p, li { text-wrap: pretty; }
 strong { font-weight: 700; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+/* Selected text, for example to copy it: a bright lavender highlight with dark text, in both themes. */
+::selection { background-color: var(--select-bg); color: var(--select-fg); }
 main:focus, .hero-name:focus { outline: none; }
+/* An address ending in #top, and the "Skip to content" link, show the very top of the page, rather than
+   the opening section half under the header. */
+#top, #main { scroll-margin-top: 100vh; }
 .vh {
   position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
@@ -224,6 +233,10 @@ main:focus, .hero-name:focus { outline: none; }
 .menu-toggle[aria-expanded="true"] .icon-close { display: block; }
 .menu-toggle[aria-expanded="true"] { background: var(--press-bg); color: var(--press-fg); border-color: var(--press-bg); }
 
+/* Without the script the header can't slide away. Below 1280 px it takes two rows or more (on phones the
+   whole menu shows), so there it scrolls with the page instead of staying on top, where it would cover
+   the section headings. */
+@media (max-width: 1279.98px) { .no-js .masthead { position: static; } }
 @media (min-width: 760px) and (max-width: 1279.98px) {
   .controls { margin-inline-start: auto; }
   .site-nav { order: 3; flex-basis: 100%; }
@@ -425,6 +438,9 @@ main:focus, .hero-name:focus { outline: none; }
 }
 .categories li { padding: 10px 14px; border-radius: 14px; background: var(--coral-soft); font-size: 15px; line-height: 1.45; }
 [dir="rtl"] .categories li { line-height: 1.7; }
+/* With the script, the list starts closed from the very first moment (the button opens it), so nothing
+   moves when the script arrives: a refresh then comes back to the same place. */
+.js .categories:not(.is-open) { display: none; }
 
 /* ------------------------------------------------------------ 3. expertise */
 .areas {
@@ -505,6 +521,8 @@ main:focus, .hero-name:focus { outline: none; }
 
 .activities { margin-top: 24px; display: grid; gap: 24px; }
 .activity { background: var(--paper); border-radius: 28px; overflow: hidden; scroll-margin-top: 110px; }
+/* Until the script has chosen the activity, only the first one shows, as it will once the script runs. */
+.js .activities:not(.is-ready) > .activity:not(:first-child) { display: none; }
 .activity::before { content: ''; display: block; height: 8px; background: var(--tone); }
 .activity-inner { padding: clamp(20px, 3.4vw, 44px); }
 .activity-head h3 {

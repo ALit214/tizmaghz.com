@@ -118,14 +118,27 @@
   // keyboard focus is in it.
   var Masthead = (function () {
     var mast = $('.masthead');
-    if (!mast) return { settle: function () {}, bottom: function () { return 0; }, height: function () { return 0; } };
+    if (!mast) return { settle: function () {}, away: function () {}, bottom: function () { return 0; }, height: function () { return 0; } };
     var lastY = window.pageYOffset;
     var down = 0;
     var up = 0;
     var ticking = false;
+    var jumping = false;   // the page is gliding to a section the reader chose in the header
+    var jumpTimer = 0;
+    function endJump() { jumping = false; lastY = window.pageYOffset; down = 0; up = 0; }
     function update() {
       ticking = false;
       var y = window.pageYOffset;
+      if (jumping) {
+        // Keep the header away until the page stops (it would come back while going up the page and cover
+        // the section's heading), except at the very top.
+        lastY = y;
+        mast.classList.toggle('is-stuck', y > 8);
+        mast.classList.toggle('is-hidden', y >= 140);
+        clearTimeout(jumpTimer);
+        jumpTimer = setTimeout(endJump, 200);
+        return;
+      }
       if (y > lastY) { down += y - lastY; up = 0; } else if (y < lastY) { up += lastY - y; down = 0; }
       lastY = y;
       mast.classList.toggle('is-stuck', y > 8);
@@ -135,6 +148,10 @@
     }
     on(window, 'scroll', function () { if (!ticking) { ticking = true; window.requestAnimationFrame(update); } }, { passive: true });
     on(mast, 'focusin', function () { mast.classList.remove('is-hidden'); });
+    // A page that opens partway down (after a refresh, Back or Forward, or at an address with a section)
+    // starts with the header away, as if the reader had scrolled there, so it covers nothing; it comes
+    // back on scrolling up.
+    if (lastY >= 140) mast.classList.add('is-hidden');
     update();
     return {
       // After the page has been moved for the reader (a language switch): header in view, counting afresh.
@@ -143,11 +160,27 @@
         mast.classList.remove('is-hidden');
         mast.classList.toggle('is-stuck', lastY > 8);
       },
+      // A section link in the header was followed: the header slides away for the jump, up or down the
+      // page, so it covers nothing where the page stops; it comes back on scrolling up.
+      away: function () {
+        jumping = true;
+        mast.classList.add('is-hidden');
+        clearTimeout(jumpTimer);
+        jumpTimer = setTimeout(endJump, 1200);   // in case the page doesn't move at all
+      },
       // Where the header ends, from the top of the window (0 while it is away).
       bottom: function () { return mast.classList.contains('is-hidden') ? 0 : Math.max(0, mast.getBoundingClientRect().bottom); },
       height: function () { return mast.offsetHeight; }
     };
   })();
+  // The section links in the header (also in the phone menu). Keyboard users keep the header in view:
+  // their focus is still in it.
+  $all('.site-nav a[href^="#"]').forEach(function (a) {
+    on(a, 'click', function (ev) {
+      if (ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || keyboardUser) return;
+      Masthead.away();
+    });
+  });
 
   // ---------------------------------------------------------------- where the reader is
   // The reading position is the first line below the header: its section, the heading, paragraph or list
@@ -574,13 +607,14 @@
   })();
 
   // ---------------------------------------------------------------- equipment categories under the reports
+  // The list starts closed through the style sheet (.js .categories), so the page doesn't move when this
+  // script arrives; the button opens and closes it.
   $all('[data-toggle-list]').forEach(function (button) {
     var list = doc.getElementById(button.getAttribute('aria-controls'));
     if (!list) return;
-    list.hidden = true;
     on(button, 'click', function () {
-      var open = list.hidden;
-      list.hidden = !open;
+      var open = !list.classList.contains('is-open');
+      list.classList.toggle('is-open', open);
       button.setAttribute('aria-expanded', open ? 'true' : 'false');
       button.textContent = open ? T.hideList : T.showList;
     });
@@ -1072,6 +1106,9 @@
     });
     var fromHash = (location.hash || '').replace(/^#act-/, '');
     show(fromHash && doc.getElementById('act-' + fromHash) ? fromHash : links[0].getAttribute('data-activity'));
+    // From now on the script says which activity shows (the style sheet showed the first one until now).
+    var box = $('.activities');
+    if (box) box.classList.add('is-ready');
     return { current: function () { return current; }, show: show };
   })();
 
@@ -1093,6 +1130,37 @@
       try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ }
     });
   });
+
+  // ---------------------------------------------------------------- an address with a section after #
+  // The browser goes to the section (#experience, #act-quiz ...) while the page loads. On a slow connection
+  // the fonts can arrive after that and move the text, so once they are in, the section is put back where
+  // the browser meant it to be, unless the reader has moved meanwhile. A refresh, Back or Forward, and a
+  // language switch (below) keep the reader's own place instead.
+  (function () {
+    var id = '';
+    try { id = decodeURIComponent((location.hash || '').slice(1)); } catch (e) { return; }
+    var target = id && doc.getElementById(id);
+    if (!target || session.get('resume')) return;
+    var nav = window.performance && performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
+    if (nav && nav.type !== 'navigate') return;
+    var moved = false;
+    ['pointerdown', 'wheel', 'touchstart', 'keydown'].forEach(function (type) {
+      on(window, type, function () { moved = true; }, { passive: true });
+    });
+    function settle() {
+      if (moved || !target.getClientRects().length) return;
+      var margin = parseFloat(window.getComputedStyle(target).scrollMarginTop) || 0;
+      var end = Math.max(0, doc.documentElement.scrollHeight - window.innerHeight);
+      var y = Math.min(end, Math.max(0, Math.round(target.getBoundingClientRect().top + window.pageYOffset - margin)));
+      if (Math.abs(y - window.pageYOffset) <= 4) return;
+      if (y > 0) Masthead.away();
+      jumpTo(y);
+    }
+    // After the browser's own glide to the section (well under a second).
+    function later() { setTimeout(settle, 900); }
+    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(later);
+    on(window, 'load', later);
+  })();
 
   // ---------------------------------------------------------------- language switcher: remember the choice, keep the place
   // The place (reading position, open activity and its step) is handed to the other page in this tab's
