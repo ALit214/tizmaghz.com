@@ -42,6 +42,7 @@
   --size-line: clamp(22px, 0.9vw + 17px, 28px);   /* the short lines under the title line and the section headings */
   --size-brand: 22px;    --w-brand: 600;
   --w-menu: 600;
+  --w-item: 600;         /* the device names in Sort the equipment: the heaviest weight in the site's Bodoni file */
   --track-head: -0.01em;
   --opsz-name: 24;   --opsz-head: 14;   --opsz-text: 8;
   --gutter: clamp(20px, 4vw, 56px);
@@ -92,6 +93,7 @@
   --lh-lead: 1.9;
   --size-brand: 19px;    --w-brand: 800;
   --w-menu: 800;
+  --w-item: 800;
   --track-head: 0;
 }
 @media (max-width: 359.98px) { :root { --size-brand: 20px; } }
@@ -492,7 +494,7 @@ main:focus, .hero-name:focus { outline: none; }
 
 /* ------------------------------------------------------------ 5. Explore & learn */
 .explore-bar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px 32px; margin-top: 36px; }
-.act-menu { display: flex; flex-wrap: wrap; gap: 18px 36px; }
+.act-menu { display: flex; flex-wrap: wrap; gap: 18px 24px; }
 .act-group { display: flex; flex-direction: column; gap: 8px; }
 .act-group-label {
   margin: 0; display: flex; align-items: center; gap: 8px;
@@ -513,6 +515,8 @@ main:focus, .hero-name:focus { outline: none; }
   font-family: var(--font-ui); font-size: 14px; font-weight: 600;
 }
 .sound-switch .icon { margin-inline-end: 6px; }
+/* On wider screens the sound switch keeps to the end of its row, also when it moves under the menu. */
+@media (min-width: 900px) { .sound-switch { margin-inline-start: auto; } }
 .sound-switch .icon-sound-on, .sound-switch[aria-checked="true"] .icon-sound-off { display: none; }
 .sound-switch[aria-checked="true"] .icon-sound-on { display: block; }
 .sound-switch[aria-checked="true"] { background: var(--press-bg); color: var(--press-fg); border-color: var(--press-bg); }
@@ -586,12 +590,18 @@ main:focus, .hero-name:focus { outline: none; }
 .ingredient[data-state="added"]:hover { background: var(--teal-chip); color: var(--teal-chip-fg); border-color: var(--teal-chip); opacity: 1; }
 .ingredient[data-state="added"] .icon { display: block; }
 .build-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.build-step { padding: 14px 16px; border-radius: 16px; background: var(--bg); }
-.build-step p, .build-result p, .stage-panel p { margin: 6px 0 0; }
-.js .build-step:not(.is-added) { display: none; }
+.build-step, .vessel-step { padding: 14px 16px; border-radius: 16px; background: var(--bg); }
+.build-step p, .vessel-step p, .build-result p, .stage-panel p { margin: 6px 0 0; }
+.js .build-step:not(.is-added), .js .vessel-step:not(.is-added) { display: none; }
 .build-result { margin-top: 10px; padding: 14px 16px; border-radius: 16px; background: var(--teal-soft); }
 .js .build-result:not(.is-shown) { display: none; }
-[data-build-reset] { margin-top: 16px; }
+[data-build-reset], [data-vessel-reset] { margin-top: 16px; }
+/* The second round, a blood vessel: offered under the finished tissue, and shown once opened (always without the script). */
+.vessel-offer { margin-top: 14px; padding-top: 12px; border-top: 1.5px solid var(--rule); }
+.vessel-offer p { margin: 0 0 10px; font-weight: 700; }
+.js .vessel:not(.is-open) { display: none; }
+.vessel { scroll-margin-top: 110px; }
+.vessel-wait { margin: -4px 0 12px; font-family: var(--font-ui); font-size: 15px; font-weight: 700; color: var(--coral-text); }
 .build-art .bt-scaffold, .build-art .bt-donor, .build-art .bt-cells, .build-art .bt-signals, .build-art .bt-tissue {
   opacity: 0; transition: opacity 0.6s ease;
 }
@@ -604,6 +614,18 @@ main:focus, .hero-name:focus { outline: none; }
   .build[data-cells="1"] .bt-cell { animation: cell-in 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; animation-delay: calc(var(--i) * 70ms); }
 }
 @keyframes cell-in { from { transform: scale(0.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+/* The blood vessel: the mesh, the cells, the matrix they lay down, and the finished vessel without its cells. */
+.vessel-art .bv-scaffold, .vessel-art .bv-cells, .vessel-art .bv-matrix, .vessel-art .bv-done { opacity: 0; transition: opacity 0.6s ease; }
+.vessel-grid[data-v-scaffold="1"] .bv-scaffold, .vessel-grid[data-v-cells="1"] .bv-cells,
+.vessel-grid[data-v-grow="1"] .bv-matrix, .vessel-grid[data-v-remove="1"] .bv-done { opacity: 1; }
+.vessel-grid[data-v-grow="1"] .bv-scaffold { opacity: 0.4; }
+.vessel-grid[data-v-remove="1"] .bv-cells { opacity: 0; }
+.no-js .vessel-art .bv-matrix, .no-js .vessel-art .bv-done { opacity: 1; }
+.no-js .vessel-art .bv-scaffold { opacity: 0.4; }
+.bv-cell { transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .vessel-grid[data-v-cells="1"] .bv-cell { animation: cell-in 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; animation-delay: calc(var(--i) * 70ms); }
+}
 
 /* How a wound heals */
 .slider-block label { display: block; font-family: var(--font-ui); font-weight: 700; font-size: 15px; }
@@ -643,15 +665,66 @@ main:focus, .hero-name:focus { outline: none; }
 .sort-dots span { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--ink); }
 .sort-dots span.is-done { background: var(--ink); }
 .sort-dots span.is-current { background: var(--coral); border-color: var(--coral); }
-.sort-item { margin: 18px 0 0; font-family: var(--font-display); font-weight: var(--w-h2); font-size: clamp(28px, 2vw + 18px, 40px); line-height: 1.2; }
+/* The device's name: at this size Bodoni's lighter weight looked washed out on the light theme (Ali, 27 October
+   2026), so the names use its heaviest weight, as the activity headings do. */
+.sort-item { margin: 18px 0 0; font-family: var(--font-display); font-weight: var(--w-item); font-size: clamp(28px, 2vw + 18px, 40px); line-height: 1.2; }
 [data-sort-next] { margin-top: 16px; }
 .sort-done p { margin: 0 0 14px; font-weight: 700; font-size: 19px; }
 .sort-key { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .sort-key li { padding: 10px 14px; border-radius: 14px; background: var(--bg); }
+.sort-reason { display: block; margin-top: 4px; font-size: 15px; }
+.sort-classes .choice[aria-disabled="true"] { cursor: default; }
+.sort-classes .choice[aria-disabled="true"]:not([data-state]) { opacity: 0.55; }
+.sort-classes .choice[aria-disabled="true"]:not([data-state]):hover { background: transparent; }
 .sort-name { font-weight: 700; }
 .sort-answer { color: var(--muted); }
 .sort-answer::before { content: '→ '; }
 [dir="rtl"] .sort-answer::before { content: '← '; }
+/* The second round, Iran's classes: offered under the first round's "Done", hidden until opened (shown without
+   scripts); each device shows its group in the guide above its name. */
+.sort-offer { margin-top: 18px; padding-top: 14px; border-top: 1.5px solid var(--rule); }
+.sort-done .sort-offer p { margin: 0 0 10px; font-size: inherit; }
+.js .sort-iran:not(.is-open) { display: none; }
+.sort-iran { scroll-margin-top: 110px; }
+.sort-group { display: block; font-family: var(--font-ui); font-size: 15px; font-weight: 700; line-height: 1.4; color: var(--muted); }
+.sort-item .sort-group { margin-bottom: 6px; }
+.sort-key .sort-group { margin-bottom: 2px; }
+
+/* From lab to clinic */
+.trials-art .tr-item { transition: opacity 0.45s ease; }
+.js .trials-art .tr-pic:not(.is-on), .js .trials-art .tr-seg:not(.is-on) { opacity: 0; }
+.js .trials-art .tr-node:not(.is-on) { opacity: 0.4; }
+.trials-art .tr-ring { opacity: 0; transition: opacity 0.4s ease; }
+.trials-art .tr-node.is-next .tr-ring { opacity: 0.95; }
+.trials-art .tr-num { font-family: var(--font-ui); font-size: 17px; font-weight: 700; }
+[dir="rtl"] .trials-art .tr-num { font-family: 'Vazirmatn', Tahoma, sans-serif; font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .trials-art .tr-item, .trials-art .tr-ring { transition: none; } }
+.tr-card, .tr-done { padding: clamp(18px, 2.6vw, 26px); border-radius: 22px; background: var(--bg); }
+.tr-question { margin: 0; font-family: var(--font-h3); font-size: clamp(21px, 0.8vw + 16px, 25px); font-weight: var(--w-h3); line-height: var(--lh-h3); }
+.tr-question:focus, .tr-done-text:focus { outline: none; }
+.tr-step .choice[aria-disabled="true"] { cursor: default; }
+.tr-step .choice[aria-disabled="true"]:not([data-state]) { opacity: 0.55; }
+.tr-step .choice[aria-disabled="true"]:not([data-state]):hover { background: transparent; }
+[data-tr-next] { margin-top: 16px; }
+/* On wide screens the path stays in view beside the growing list. */
+@media (min-width: 900px) { .trials .act-visual { position: sticky; top: 112px; } }
+.tr-done p { margin: 0 0 14px; font-weight: 700; font-size: 19px; }
+.tr-log { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+.js .tr-stage:not(.is-placed) { display: none; }
+.tr-stage { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--bg); }
+.tr-stage h4 { font-size: 16px; }
+.tr-stage p { margin: 2px 0 0; }
+.tr-asks { color: var(--muted); }
+.tr-text { margin-top: 6px; }
+.js .tr-stage .tr-text { display: none; }
+.tr-badge {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--tone-chip); color: var(--tone-chip-fg); font-family: var(--font-ui); font-size: 14px; font-weight: 700;
+}
+[dir="rtl"] .tr-badge { font-family: 'Vazirmatn', Tahoma, sans-serif; font-weight: 800; }
+.checked { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+.next-step { margin: 18px 0 0; }
+.next-step a { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-ui); font-size: 15px; font-weight: 700; }
 
 /* Quick quiz */
 .quiz { margin-top: 28px; max-width: 760px; }

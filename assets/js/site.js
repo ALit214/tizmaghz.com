@@ -721,11 +721,11 @@
     announcer.textContent = '';
     setTimeout(function () { announcer.textContent = text; }, 150);
   }
-  // The text of a box as it should be read out: without its "Source" link, and with headings and
+  // The text of a box as it should be read out: without its "Source" link or buttons, and with headings and
   // paragraphs kept apart (so a title and the text under it aren't read as one long word).
   function spokenText(box) {
     var copy = box.cloneNode(true);
-    $all('.source-link', copy).forEach(function (a) { a.parentNode.removeChild(a); });
+    $all('.source-link, button', copy).forEach(function (a) { a.parentNode.removeChild(a); });
     $all('h1, h2, h3, h4, h5, h6', copy).forEach(function (h) {
       h.appendChild(doc.createTextNode(/[.:!?\u061F]\s*$/.test(h.textContent) ? ' ' : '. '));
     });
@@ -782,17 +782,17 @@
   // ---------------------------------------------------------------- activities
   var activities = {};
 
-  // Build a tissue
+  // Build a tissue, then a blood vessel
   (function () {
     var panel = $('#act-build');
     if (!panel) return;
     var box = $('.build', panel);
-    var buttons = $all('[data-ingredient]', $('.ingredients', panel));
-    var steps = $all('.build-step', panel);
-    var log = $('.build-log', panel);
-    var result = $('[data-build-result]', panel);
-    var progress = $('[data-build-progress]', panel);
-    var reset = $('[data-build-reset]', panel);
+    var buttons = $all('[data-ingredient]', $('.ingredients', box));
+    var steps = $all('.build-step', box);
+    var log = $('.build-log', box);
+    var result = $('[data-build-result]', box);
+    var progress = $('[data-build-progress]', box);
+    var reset = $('[data-build-reset]', box);
     var added = [];
     function slots() {
       var s = {};
@@ -832,10 +832,91 @@
       });
     });
     on(reset, 'click', function () { added = []; render(); buttons[0].focus(); });
+
+    // The second round, below the first: a blood vessel in four steps. Cells and the scaffold can come in either
+    // order; the bioreactor needs both, and removing the cells needs the bioreactor ("needs" on each button).
+    // A step chosen too early says what has to come first.
+    var vessel = $('[data-vessel]', panel);
+    var vgrid = vessel && $('.vessel-grid', vessel);
+    var vbuttons = vessel ? $all('[data-vstep]', $('.ingredients', vessel)) : [];
+    var vsteps = vessel ? $all('.vessel-step', vessel) : [];
+    var vlog = vessel && $('.vessel-log', vessel);
+    var vresult = vessel && $('[data-vessel-result]', vessel);
+    var vprogress = vessel && $('[data-vessel-progress]', vessel);
+    var vwait = vessel && $('[data-vessel-wait]', vessel);
+    var vreset = vessel && $('[data-vessel-reset]', vessel);
+    var vtitle = vessel && $('#vessel-title', vessel);
+    var vstart = $('[data-vessel-start]', panel);
+    var open = false;
+    var done = [];
+    function needs(b) { return (b.getAttribute('data-needs') || '').split(' ').filter(Boolean); }
+    function renderVessel() {
+      if (!vessel) return;
+      vessel.classList.toggle('is-open', open);
+      vbuttons.forEach(function (b) {
+        var id = b.getAttribute('data-vstep');
+        var has = done.indexOf(id) !== -1;
+        vgrid.setAttribute('data-v-' + id, has ? '1' : '0');
+        b.setAttribute('aria-disabled', has ? 'true' : 'false');
+        if (has) b.setAttribute('data-state', 'added'); else b.removeAttribute('data-state');
+      });
+      vgrid.classList.toggle('is-complete', done.length === vbuttons.length);
+      vsteps.forEach(function (li) { li.classList.toggle('is-added', done.indexOf(li.getAttribute('data-vstep')) !== -1); });
+      done.forEach(function (id) { vsteps.forEach(function (li) { if (li.getAttribute('data-vstep') === id) vlog.appendChild(li); }); });
+      vprogress.textContent = fill(T.vesselProgress, { n: done.length, total: vbuttons.length });
+      vresult.classList.toggle('is-shown', done.length === vbuttons.length);
+      vreset.hidden = done.length === 0;
+    }
+    vbuttons.forEach(function (b) {
+      on(b, 'click', function () {
+        if (b.getAttribute('aria-disabled') === 'true') return;
+        var id = b.getAttribute('data-vstep');
+        var missing = needs(b).filter(function (n) { return done.indexOf(n) === -1; });
+        if (missing.length) {
+          vwait.textContent = T.vesselWait[id] || '';
+          vwait.hidden = false;
+          Sound.play('again');
+          announce(vwait.textContent);
+          return;
+        }
+        vwait.hidden = true;
+        done.push(id);
+        renderVessel();
+        var complete = done.length === vbuttons.length;
+        Sound.play(complete ? 'done' : 'right');
+        var step = vsteps.filter(function (li) { return li.getAttribute('data-vstep') === id; })[0];
+        announce((step ? spokenText(step) : '') + (complete ? ' ' + spokenText(vresult) : ''));
+      });
+    });
+    // Opening the second round: it appears below, and the page goes to its heading, which takes the keyboard.
+    on(vstart, 'click', function () {
+      if (!vessel) return;
+      open = true;
+      renderVessel();
+      try { vtitle.focus({ preventScroll: true }); } catch (e) { vtitle.focus(); }
+      var margin = parseFloat(window.getComputedStyle(vessel).scrollMarginTop) || 0;
+      var y = Math.max(0, Math.round(vessel.getBoundingClientRect().top + window.pageYOffset - margin - 16));
+      if (reduceMotion.matches) jumpTo(y);
+      else try { window.scrollTo({ top: y, left: 0, behavior: 'smooth' }); } catch (e) { jumpTo(y); }
+    });
+    on(vreset, 'click', function () { done = []; vwait.hidden = true; renderVessel(); vbuttons[0].focus(); });
     render();
+    renderVessel();
     activities.build = {
-      state: function () { return { added: added.slice() }; },
-      restore: function (st) { if (st && st.added) { added = st.added.filter(function (id) { return buttons.some(function (b) { return b.getAttribute('data-ingredient') === id; }); }); render(); } }
+      state: function () { return { added: added.slice(), vessel: open, vsteps: done.slice() }; },
+      restore: function (st) {
+        if (!st) return;
+        if (st.added) { added = st.added.filter(function (id) { return buttons.some(function (b) { return b.getAttribute('data-ingredient') === id; }); }); render(); }
+        if (vessel && st.vessel) {
+          open = true;
+          done = [];
+          (st.vsteps || []).forEach(function (id) {
+            var b = vbuttons.filter(function (x) { return x.getAttribute('data-vstep') === id; })[0];
+            if (b && done.indexOf(id) === -1 && needs(b).every(function (n) { return done.indexOf(n) !== -1; })) done.push(id);
+          });
+          renderVessel();
+        }
+      }
     };
   })();
 
@@ -913,82 +994,228 @@
     });
   });
 
-  // Sort the equipment
+  // Sort the equipment: one device at a time, into the classes of each round. In the first round, the FDA's three
+  // classes: the answer shows with its reason and a link to the device's entry in the FDA's database. Once all
+  // eight are sorted, a button opens the second round below: eight more devices in Iran's four classes, A to D,
+  // each shown with its group in the guide.
   (function () {
     var panel = $('#act-sort');
     if (!panel || !DATA.sort) return;
-    var card = $('[data-sort-card]', panel);
-    var itemEl = $('[data-sort-item]', panel);
-    var choicesEl = $('[data-sort-choices]', panel);
-    var feedback = $('[data-sort-feedback]', panel);
-    var nextBtn = $('[data-sort-next]', panel);
-    var done = $('[data-sort-done]', panel);
-    var again = $('[data-sort-again]', panel);
-    var dots = $all('.sort-dots span', panel);
-    var items = DATA.sort.items;
-    var cats = DATA.sort.categories;
-    var markRight = $('.choice-mark.mark-right', doc.getElementById('act-lifecycle')) || null;
-    var index = 0;
-    function makeChoice(catNumber) {
-      var b = doc.createElement('button');
-      b.type = 'button';
-      b.className = 'choice';
-      b.setAttribute('data-choice', String(catNumber));
-      if (markRight) {
-        var right = markRight.cloneNode(true);
-        var wrong = $('.choice-mark.mark-wrong', markRight.parentNode).cloneNode(true);
-        b.appendChild(right);
-        b.appendChild(wrong);
+    function sorter(root, data) {
+      var card = $('[data-sort-card]', root);
+      var itemEl = $('[data-sort-item]', root);
+      var groupEl = $('[data-sort-group]', root);
+      var nameEl = $('[data-sort-name]', root) || itemEl;
+      var choicesEl = $('[data-sort-choices]', root);
+      var choices = $all('.choice', choicesEl);
+      var feedback = $('[data-sort-feedback]', root);
+      var verdict = $('[data-sort-verdict]', root);
+      var reason = $('[data-sort-reason]', root);
+      var source = $('[data-sort-source]', root);
+      var nextBtn = $('[data-sort-next]', root);
+      var done = $('[data-sort-done]', root);
+      var again = $('[data-sort-again]', root);
+      var dots = $all('.sort-dots span', root);
+      var items = data.items;
+      var cats = data.categories;
+      var index = 0;
+      function show(focusItem) {
+        card.hidden = index >= items.length;
+        done.hidden = index < items.length;
+        dots.forEach(function (d, k) { d.className = k < index ? 'is-done' : (k === index ? 'is-current' : ''); });
+        if (index >= items.length) { if (focusItem) $('.sort-done-text', done).focus(); return; }
+        if (groupEl) groupEl.textContent = items[index].group || '';
+        nameEl.textContent = items[index].name;
+        choices.forEach(function (o) { o.removeAttribute('data-state'); o.setAttribute('aria-disabled', 'false'); });
+        feedback.hidden = true;
+        feedback.classList.remove('is-shown');
+        nextBtn.hidden = true;
+        if (focusItem) itemEl.focus();
       }
-      var label = doc.createElement('span');
-      label.textContent = cats[catNumber - 1];
-      b.appendChild(label);
-      return b;
-    }
-    function show(focusItem) {
-      card.hidden = index >= items.length;
-      done.hidden = index < items.length;
-      dots.forEach(function (d, k) { d.className = k < index ? 'is-done' : (k === index ? 'is-current' : ''); });
-      if (index >= items.length) { $('.sort-done-text', done).focus(); return; }
-      var item = items[index];
-      itemEl.textContent = item.name;
-      choicesEl.innerHTML = '';
-      item.choices.forEach(function (n) { choicesEl.appendChild(makeChoice(n)); });
-      feedback.hidden = true;
-      nextBtn.hidden = true;
-      if (focusItem) itemEl.focus();
-    }
-    on(choicesEl, 'click', function (ev) {
-      var b = ev.target.closest ? ev.target.closest('.choice') : null;
-      if (!b) return;
-      var item = items[index];
-      var right = parseInt(b.getAttribute('data-choice'), 10) === item.answer;
-      $all('.choice', choicesEl).forEach(function (o) {
-        var isAnswer = parseInt(o.getAttribute('data-choice'), 10) === item.answer;
-        if (o === b) o.setAttribute('data-state', right ? 'right' : 'wrong');
-        else if (isAnswer && !right) o.setAttribute('data-state', 'answer');
-        else o.removeAttribute('data-state');
+      on(choicesEl, 'click', function (ev) {
+        var b = ev.target.closest ? ev.target.closest('.choice') : null;
+        if (!b || b.getAttribute('aria-disabled') === 'true' || index >= items.length) return;
+        var item = items[index];
+        var right = parseInt(b.getAttribute('data-choice'), 10) === item.answer;
+        choices.forEach(function (o) {
+          var isAnswer = parseInt(o.getAttribute('data-choice'), 10) === item.answer;
+          if (o === b) o.setAttribute('data-state', right ? 'right' : 'wrong');
+          else if (isAnswer && !right) o.setAttribute('data-state', 'answer');
+          else o.removeAttribute('data-state');
+          o.setAttribute('aria-disabled', 'true');
+        });
+        verdict.textContent = fill(right ? T.sortRight : T.sortWrong, { category: cats[item.answer - 1] });
+        reason.textContent = item.reason;
+        if (source && item.source) source.setAttribute('href', item.source);
+        feedback.setAttribute('data-result', right ? 'right' : 'wrong');
+        feedback.hidden = false;
+        feedback.classList.add('is-shown');
+        nextBtn.hidden = false;
+        announce(spokenText(feedback));
+        Sound.play(right ? 'right' : 'again');
+        if (right) burst(b);
       });
-      var text = fill(right ? T.sortRight : T.sortWrong, { category: cats[item.answer - 1] });
-      feedback.setAttribute('data-result', right ? 'right' : 'wrong');
-      $('p', feedback).textContent = text;
-      feedback.hidden = false;
+      on(nextBtn, 'click', function () {
+        index += 1;
+        show(true);
+        if (index >= items.length) Sound.play('done');
+      });
+      on(again, 'click', function () { index = 0; show(true); });
+      show(false);
+      return {
+        step: function () { return index; },
+        restore: function (step) { if (step >= 0 && step <= items.length) { index = step; show(false); } }
+      };
+    }
+    var fda = sorter($('[data-sort-round="fda"]', panel), DATA.sort);
+    // The second round: it appears below the first, and the page goes to its heading, which takes the keyboard.
+    var iranBox = $('[data-sort-iran]', panel);
+    var iran = iranBox && DATA.sortIran ? sorter($('[data-sort-round="iran"]', iranBox), DATA.sortIran) : null;
+    var iranTitle = iranBox && $('#sort-iran-title', iranBox);
+    var iranStart = $('[data-sort-iran-start]', panel);
+    var open = false;
+    function renderIran() { if (iranBox) iranBox.classList.toggle('is-open', open); }
+    on(iranStart, 'click', function () {
+      if (!iran) return;
+      open = true;
+      renderIran();
+      try { iranTitle.focus({ preventScroll: true }); } catch (e) { iranTitle.focus(); }
+      var margin = parseFloat(window.getComputedStyle(iranBox).scrollMarginTop) || 0;
+      var y = Math.max(0, Math.round(iranBox.getBoundingClientRect().top + window.pageYOffset - margin - 16));
+      if (reduceMotion.matches) jumpTo(y);
+      else try { window.scrollTo({ top: y, left: 0, behavior: 'smooth' }); } catch (e) { jumpTo(y); }
+    });
+    renderIran();
+    activities.sort = {
+      state: function () { return { step: fda.step(), iran: open, istep: iran ? iran.step() : 0 }; },
+      restore: function (st) {
+        if (!st) return;
+        fda.restore(st.step);
+        if (iran && st.iran) { open = true; renderIran(); iran.restore(st.istep || 0); }
+      }
+    };
+  })();
+
+  // From lab to clinic: the seven stages are put in place one at a time. Each step asks which stage comes
+  // next and shows that step's answers (all in the page, one group per step). Right or wrong, the right
+  // stage then goes in place: its stop on the path lights up, its explanation shows, and it joins the list.
+  (function () {
+    var panel = $('#act-trials');
+    if (!panel || !DATA.trials) return;
+    var box = $('.trials', panel);
+    var card = $('[data-tr-card]', panel);
+    var question = $('[data-tr-question]', panel);
+    var groups = $all('[data-tr-step]', panel);
+    var feedback = $('[data-tr-feedback]', panel);
+    var nextBtn = $('[data-tr-next]', panel);
+    var done = $('[data-tr-done]', panel);
+    var again = $('[data-tr-again]', panel);
+    var progress = $('[data-tr-progress]', panel);
+    var stages = $all('.tr-stage', panel);
+    var art = $all('.tr-item', panel);
+    var total = stages.length;
+    var step = 0;          // the step being asked (0 to total; total = all done)
+    var answered = false;  // the current step has been answered, and its stage is in place
+    function placed() { return answered ? step + 1 : step; }
+    function render() {
+      var n = placed();
+      var finished = step >= total;
+      box.setAttribute('data-placed', String(n));
+      art.forEach(function (el) {
+        var k = parseInt(el.getAttribute('data-tr'), 10);
+        el.classList.toggle('is-on', k <= n);
+        el.classList.toggle('is-next', !answered && !finished && k === step + 1);
+      });
+      stages.forEach(function (li, k) { li.classList.toggle('is-placed', k < n); });
+      groups.forEach(function (g, k) { g.hidden = k !== step; });
+      progress.textContent = fill(T.trProgress, { n: n, total: total });
+      card.hidden = finished;
+      done.hidden = !finished;
+      if (finished) return;
+      question.textContent = step === 0 ? T.trFirst : T.trNext;
+      nextBtn.hidden = !answered;
+      if (!answered) {
+        feedback.classList.remove('is-shown');
+        feedback.removeAttribute('data-result');
+      }
+    }
+    // The explanation of stage k (from 0), as the list in the page holds it, after the verdict.
+    function explain(k, right) {
+      var p = $('p', feedback);
+      var li = stages[k];
+      p.textContent = '';
+      var verdict = doc.createElement('span');
+      verdict.className = 'verdict';
+      verdict.textContent = right === null ? '' : (right ? T.correct : T.notQuite);
+      var name = doc.createElement('strong');
+      name.textContent = fill(T.trPlaced, { n: k + 1, stage: DATA.trials[k] });
+      p.appendChild(verdict);
+      if (right !== null) p.appendChild(doc.createTextNode(' '));
+      p.appendChild(name);
+      p.appendChild(doc.createTextNode(' ' + $('.tr-asks', li).textContent + ' '));
+      Array.prototype.forEach.call($('.tr-text', li).childNodes, function (node) { p.appendChild(node.cloneNode(true)); });
+      feedback.setAttribute('data-result', right === false ? 'wrong' : 'right');
       feedback.classList.add('is-shown');
-      nextBtn.hidden = false;
-      announce(text);
-      Sound.play(right ? 'right' : 'again');
-      if (right) burst(b);
+    }
+    function reset(g) {
+      $all('.choice', g).forEach(function (o) { o.removeAttribute('data-state'); o.setAttribute('aria-disabled', 'false'); });
+    }
+    groups.forEach(function (g) {
+      on(g, 'click', function (ev) {
+        var b = ev.target.closest ? ev.target.closest('.choice') : null;
+        if (!b || answered || b.getAttribute('aria-disabled') === 'true') return;
+        var answer = String(step + 1);
+        var right = b.getAttribute('data-choice') === answer;
+        $all('.choice', g).forEach(function (o) {
+          var isAnswer = o.getAttribute('data-choice') === answer;
+          if (o === b) o.setAttribute('data-state', right ? 'right' : 'wrong');
+          else if (isAnswer && !right) o.setAttribute('data-state', 'answer');
+          else o.removeAttribute('data-state');
+          o.setAttribute('aria-disabled', 'true');
+        });
+        answered = true;
+        render();
+        explain(step, right);
+        announce(spokenText(feedback) + ' ' + progress.textContent);
+        Sound.play(right ? 'right' : 'again');
+        if (right) burst(b);
+        // The answers are now locked: the keyboard moves on to the button that goes on.
+        if (g.contains(doc.activeElement)) nextBtn.focus();
+      });
     });
     on(nextBtn, 'click', function () {
-      index += 1;
-      show(true);
-      if (index >= items.length) Sound.play('done');
+      step += 1;
+      answered = false;
+      if (step < total) reset(groups[step]);
+      render();
+      if (step >= total) { Sound.play('done'); $('.tr-done-text', done).focus(); }
+      else question.focus();
     });
-    on(again, 'click', function () { index = 0; show(true); });
-    show(false);
-    activities.sort = {
-      state: function () { return { step: index }; },
-      restore: function (st) { if (st && st.step >= 0 && st.step <= items.length) { index = st.step; show(false); } }
+    on(again, 'click', function () {
+      step = 0;
+      answered = false;
+      groups.forEach(reset);
+      render();
+      question.focus();
+    });
+    render();
+    activities.trials = {
+      state: function () { return { step: step, answered: answered }; },
+      restore: function (st) {
+        if (!st || !(st.step >= 0) || st.step > total) return;
+        step = st.step;
+        answered = !!st.answered && step < total;
+        groups.forEach(reset);
+        render();
+        if (answered) {
+          // Show the answer as it was: the right stage marked, the answers locked, and its explanation.
+          $all('.choice', groups[step]).forEach(function (o) {
+            if (o.getAttribute('data-choice') === String(step + 1)) o.setAttribute('data-state', 'answer');
+            o.setAttribute('aria-disabled', 'true');
+          });
+          explain(step, null);
+        }
+      }
     };
   })();
 
@@ -1111,6 +1338,31 @@
     if (box) box.classList.add('is-ready');
     return { current: function () { return current; }, show: show };
   })();
+
+  // A link from one activity to another (such as "Next: ..."): shows that activity, goes to the place the
+  // link names (the activity's top, or a heading inside it) and puts the keyboard on that heading.
+  // Without the script the link simply goes there.
+  $all('[data-goto]').forEach(function (a) {
+    on(a, 'click', function (ev) {
+      if (ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+      var key = a.getAttribute('data-goto');
+      var panel = doc.getElementById('act-' + key);
+      if (!panel) return;
+      var named = doc.getElementById((a.getAttribute('href') || '').replace(/^#/, ''));
+      var target = named && panel.contains(named) ? named : panel;
+      ev.preventDefault();
+      Explore.show(key);
+      var title = target === panel ? $('h3', panel) : target;
+      if (title) {
+        if (!title.hasAttribute('tabindex')) title.setAttribute('tabindex', '-1');
+        try { title.focus({ preventScroll: true }); } catch (e) { title.focus(); }
+      }
+      var margin = parseFloat(window.getComputedStyle(panel).scrollMarginTop) || 0;
+      var y = Math.max(0, Math.round(target.getBoundingClientRect().top + window.pageYOffset - margin));
+      if (reduceMotion.matches) jumpTo(y);
+      else try { window.scrollTo({ top: y, left: 0, behavior: 'smooth' }); } catch (e) { jumpTo(y); }
+    });
+  });
 
   // ---------------------------------------------------------------- back to the top
   // "Back to top" and the name in the header go to the very top of the page. (The browser's own jump
