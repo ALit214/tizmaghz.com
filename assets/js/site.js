@@ -113,9 +113,42 @@
   });
   onMediaChange(compact, function () { setMenu(false); });
 
+  // ---------------------------------------------------------------- Explore & learn's short list (computers)
+  // Since version 2.00, Explore & learn opens a short list on computers: the activities and the pages of their own.
+  // A click or tap on its button (or Enter or Space) opens and closes it; it also closes with a link in it, a click
+  // or tap anywhere outside it, Escape (which brings the keyboard focus back to the button), or the keyboard focus
+  // moving out of it. On phones the list is part of the menu itself, and the button is hidden.
+  var subItem = $('.nav-explore');
+  var subToggle = $('.nav-explore-toggle');
+  function subOpen() { return !!(subItem && subItem.classList.contains('open')); }
+  function setSub(open) {
+    if (!subItem || !subToggle) return;
+    subItem.classList.toggle('open', open);
+    subToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  on(subToggle, 'click', function () { setSub(!subOpen()); });
+  on(subItem, 'click', function (ev) {
+    if (ev.target.closest && ev.target.closest('.nav-sub a')) setSub(false);
+  });
+  on(doc, 'pointerdown', function (ev) {
+    if (subOpen() && !subItem.contains(ev.target)) setSub(false);
+  }, true);
+  on(doc, 'keydown', function (ev) {
+    if ((ev.key === 'Escape' || ev.key === 'Esc') && subOpen()) {
+      var inside = subItem.contains(doc.activeElement);
+      setSub(false);
+      if (inside) subToggle.focus();
+    }
+  });
+  on(subItem, 'focusout', function (ev) {
+    var to = ev.relatedTarget;
+    if (subOpen() && to && !subItem.contains(to)) setSub(false);
+  });
+  onMediaChange(compact, function () { setSub(false); });
+
   // ---------------------------------------------------------------- the header slides away while reading down
-  // and comes back on scrolling up. It stays near the top of the page, while the menu is open, and while
-  // keyboard focus is in it.
+  // and comes back on scrolling up. It stays near the top of the page, while the menu or Explore & learn's list is
+  // open, and while keyboard focus is in it.
   var Masthead = (function () {
     var mast = $('.masthead');
     if (!mast) return { settle: function () {}, away: function () {}, bottom: function () { return 0; }, height: function () { return 0; } };
@@ -142,7 +175,7 @@
       if (y > lastY) { down += y - lastY; up = 0; } else if (y < lastY) { up += lastY - y; down = 0; }
       lastY = y;
       mast.classList.toggle('is-stuck', y > 8);
-      var keep = y < 140 || menuOpen() || (keyboardUser && mast.contains(doc.activeElement));
+      var keep = y < 140 || menuOpen() || subOpen() || (keyboardUser && mast.contains(doc.activeElement));
       if (keep || up > 12) mast.classList.remove('is-hidden');
       else if (down > 24) mast.classList.add('is-hidden');
     }
@@ -175,7 +208,7 @@
   })();
   // The section links in the header (also in the phone menu). Keyboard users keep the header in view:
   // their focus is still in it.
-  $all('.site-nav a[href^="#"]').forEach(function (a) {
+  $all('.site-nav a[href^="#"]:not([href="#top"])').forEach(function (a) {
     on(a, 'click', function (ev) {
       if (ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || keyboardUser) return;
       Masthead.away();
@@ -186,7 +219,11 @@
   // The reading position is the first line below the header: its section, the heading, paragraph or list
   // item there (counted within the section: the three language versions are built alike, so the same
   // count finds the same item in another language) and how far into that item.
-  var SECTION_IDS = ['top', 'work', 'expertise', 'experience', 'explore', 'contact'];
+  // A page of its own lists its parts on its <main> (data-sections); the home page has its six sections.
+  var SECTION_IDS = (function () {
+    var main = $('main[data-sections]');
+    return main ? main.getAttribute('data-sections').split(' ') : ['top', 'work', 'expertise', 'experience', 'explore', 'contact'];
+  })();
   var BLOCKS = 'h1, h2, h3, h4, p, li, fieldset, figure';
   function readingPosition() {
     var root = doc.documentElement;
@@ -1325,10 +1362,31 @@
         else a.removeAttribute('aria-current');
       });
     }
+    // (2.00, Ali's request) On phones (the layout with the phone menu, under 760 px) the activity menu is tall
+    // and the activity opens below it, out of sight: after a tap the page glides to the activity's top (at
+    // once with reduced motion), with the header away as for the section links, so it covers nothing. On
+    // wider screens the menu is short and the activity is usually in view, so the page moves only when the
+    // activity's heading isn't. The keyboard (Enter) keeps its place in the menu, so the page doesn't move
+    // away from the focused button.
+    var phoneLayout = media('(max-width: 759.98px)');
+    function bringIntoView(panel) {
+      var rect = panel.getBoundingClientRect();
+      var view = window.innerHeight || doc.documentElement.clientHeight;
+      if (!phoneLayout.matches && rect.top >= Masthead.bottom() && rect.top <= view - 120) return;
+      var margin = parseFloat(window.getComputedStyle(panel).scrollMarginTop) || 0;
+      var y = Math.max(0, Math.round(rect.top + window.pageYOffset - margin));
+      if (Math.abs(y - window.pageYOffset) < 4) return;
+      Masthead.away();
+      if (reduceMotion.matches) jumpTo(y);
+      else try { window.scrollTo({ top: y, left: 0, behavior: 'smooth' }); } catch (e) { jumpTo(y); }
+    }
     links.forEach(function (a) {
       on(a, 'click', function (ev) {
         ev.preventDefault();
-        show(a.getAttribute('data-activity'));
+        var key = a.getAttribute('data-activity');
+        show(key);
+        var panel = doc.getElementById('act-' + key);
+        if (ev.detail && panel && !panel.hidden) bringIntoView(panel);
       });
     });
     var fromHash = (location.hash || '').replace(/^#act-/, '');
@@ -1372,7 +1430,7 @@
       if (ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
       ev.preventDefault();
       setMenu(false);
-      var name = doc.getElementById('name');
+      var name = doc.getElementById('name') || $('main h1');
       if (name) {
         if (!name.hasAttribute('tabindex')) name.setAttribute('tabindex', '-1');
         try { name.focus({ preventScroll: true }); } catch (e) { name.focus(); }

@@ -201,13 +201,46 @@ main:focus, .hero-name:focus { outline: none; }
 .brand img { display: block; width: 38px; height: 38px; }
 .site-menu { display: contents; }
 .site-nav { flex: 1 1 360px; }
-.site-nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 24px; }
-.site-nav a {
+.site-nav ul { list-style: none; margin: 0; padding: 0; }
+.site-nav > ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 24px; }
+.site-nav a, .nav-explore-toggle {
   display: inline-flex; align-items: center; min-height: 44px;
   font-family: var(--font-ui); font-size: 15px; font-weight: 600; white-space: nowrap; text-decoration: none;
   text-decoration-thickness: 2px; text-underline-offset: 6px;
 }
-.site-nav a:hover { text-decoration: underline; text-decoration-color: var(--teal); }
+.site-nav a:hover, .nav-explore-toggle:hover { text-decoration: underline; text-decoration-color: var(--teal); }
+/* Explore & learn (since version 2.00): on computers a button that opens a short list, the activities and the pages
+   of their own; on a page of its own it is underlined in its colour, as the part of the site you are in. */
+.nav-explore { position: relative; }
+.nav-explore-toggle { gap: 4px; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.nav-explore-toggle .icon { width: 16px; height: 16px; transition: transform 0.2s ease; }
+.nav-explore-toggle[aria-expanded="true"] .icon { transform: rotate(180deg); }
+.nav-explore.is-current > a, .nav-explore.is-current > button { text-decoration: underline; text-decoration-color: var(--gold); }
+.nav-explore-label { display: none; }   /* the list's name on phones (below) */
+@media (min-width: 760px) {
+  /* The list under Explore & learn's button: each item with a dot in its colour (the activities gold, as the
+     section; a page, its door's colour); the page you are on is shaded. */
+  .js .nav-explore-link { display: none; }
+  .js .nav-sub {
+    display: none; position: absolute; top: calc(100% + 4px); inset-inline-start: -14px; z-index: 3; min-width: 250px;
+    padding: 8px; background: var(--bg); border: 1px solid var(--rule); border-radius: 18px;
+    box-shadow: 0 18px 30px rgba(12, 6, 24, 0.18);
+  }
+  .js .nav-explore.open .nav-sub { display: grid; gap: 2px; }
+  .js .nav-sub a { display: flex; gap: 12px; width: 100%; padding: 0 14px; border-radius: 12px; }
+  .js .nav-sub a::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--tone); }
+  .js .nav-sub-activities a::before { background: var(--gold); }
+  .js .nav-sub a:hover { background: var(--tint); text-decoration: none; }
+  .js .nav-sub a[aria-current="page"] { background: var(--tint); font-weight: 700; }
+}
+@media (min-width: 760px) {
+  /* Without the script the button can't open the list: on computers Explore & learn is then a link, and the pages
+     follow it in the menu as links of their own (the page you are on underlined in its colour). */
+  .no-js .nav-explore, .no-js .nav-sub { display: contents; }
+  .no-js .nav-sub-activities { display: none; }
+  .no-js .nav-sub a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--tone); }
+  .no-js .nav-explore.is-current > a { text-decoration: none; }
+}
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
 .lang-switch, .theme-switch { display: flex; gap: 6px; }
 .theme-switch { gap: 4px; }
@@ -242,7 +275,15 @@ main:focus, .hero-name:focus { outline: none; }
 @media (min-width: 760px) and (max-width: 1279.98px) {
   .controls { margin-inline-start: auto; }
   .site-nav { order: 3; flex-basis: 100%; }
-  .site-nav ul { justify-content: flex-start; }
+  .site-nav > ul { justify-content: flex-start; }
+}
+/* The Arabic name and menu are longer: since version 2.00 (with Home in the menu) the Arabic header keeps its two
+   rows up to 1360 px, so the menu never breaks onto a second line of its own. */
+@media (min-width: 1280px) and (max-width: 1359.98px) {
+  :root.no-js[lang="ar"] .masthead { position: static; }
+  :root[lang="ar"] .controls { margin-inline-start: auto; }
+  :root[lang="ar"] .site-nav { order: 3; flex-basis: 100%; }
+  :root[lang="ar"] .site-nav > ul { justify-content: flex-start; }
 }
 @media (max-width: 759.98px) {
   /* Name and menu button share one row on phones (spacing kept tight enough for the Arabic name at 360 px). */
@@ -260,7 +301,7 @@ main:focus, .hero-name:focus { outline: none; }
   }
   .js .site-menu.open { display: flex; }
   .site-nav { flex: none; }
-  .site-nav ul { flex-direction: column; gap: 0; }
+  .site-nav > ul { flex-direction: column; gap: 0; }
   .site-nav li { display: block; }
   .site-nav a {
     display: flex; gap: 14px; min-height: 56px; width: 100%;
@@ -268,11 +309,25 @@ main:focus, .hero-name:focus { outline: none; }
     font-family: var(--font-display); font-size: 26px; font-weight: var(--w-menu); white-space: normal;
   }
   .site-nav a::before { content: ''; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--dot, var(--teal)); }
-  .site-nav li:nth-child(1) a { --dot: var(--teal); }
-  .site-nav li:nth-child(2) a { --dot: var(--coral); }
-  .site-nav li:nth-child(3) a { --dot: var(--magenta); }
-  .site-nav li:nth-child(4) a { --dot: var(--gold); }
-  .site-nav li:nth-child(5) a { --dot: var(--violet); }
+  /* Each section keeps its colour; Home is a ring. */
+  .nav-home > a::before { background: transparent; box-shadow: inset 0 0 0 2.5px var(--ink); }
+  .nav-work > a { --dot: var(--teal); }
+  .nav-expertise > a { --dot: var(--coral); }
+  .nav-experience > a { --dot: var(--magenta); }
+  .nav-contact > a { --dot: var(--violet); }
+  /* Explore & learn heads its list, as on computers (Ali's choice, 28 October 2026): its name, in its colour but not a
+     link, then the activities and the pages of their own under it, smaller. Each row leads to one place. */
+  .nav-explore-toggle, .site-nav .nav-explore-link { display: none; }
+  .nav-explore-label {
+    display: flex; align-items: center; gap: 14px; min-height: 56px; width: 100%;
+    font-family: var(--font-display); font-size: 26px; font-weight: var(--w-menu);
+  }
+  .nav-explore-label::before { content: ''; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--gold); }
+  .nav-sub a { min-height: 50px; padding-inline-start: 28px; font-family: var(--font-ui); font-size: 18px; font-weight: 700; }
+  .nav-sub a::before { width: 10px; height: 10px; background: var(--tone); }
+  .nav-sub .nav-sub-activities a::before { background: var(--gold); }
+  /* The page you are on is underlined in its colour. */
+  .nav-sub a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--tone); }
   .controls { justify-content: space-between; }
   .lang-switch a, .lang-current { min-height: 44px; }
   .theme-switch button { width: 44px; height: 44px; }
@@ -860,6 +915,117 @@ main:focus, .hero-name:focus { outline: none; }
   /* The heading, the message, the home button, "Or go straight to:" and the five buttons share rows across
      the three columns, so the buttons line up even though Persian and Arabic lines are taller. */
   .no-js .nf-block { display: grid; grid-row: span 5; grid-template-rows: subgrid; align-content: start; }
+}
+
+/* ------------------------------------------------------------ Go further (under Explore & learn, since version 2.00) */
+/* One door per page of its own that is ready: a wide link with a coloured top edge, like the entries of
+   Selected work, its title in the display type and an arrow that points the way the page reads. */
+.further { margin-top: 40px; }
+.further-title {
+  margin: 0; font-family: var(--font-ui); font-size: 15px; font-weight: 700;
+  letter-spacing: 0.02em; color: var(--muted);
+}
+.doors { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+.door a {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 24px;
+  min-height: 120px; padding: 26px clamp(20px, 3vw, 36px); border-radius: 24px;
+  border-top: 6px solid var(--tone); background: var(--paper); text-decoration: none;
+}
+.door a:hover { background: var(--tone-soft); }
+.door-title {
+  grid-column: 1; font-family: var(--font-display); font-weight: var(--w-h3);
+  font-size: clamp(28px, 1.6vw + 18px, 38px); line-height: 1.1; letter-spacing: var(--track-head);
+}
+.door-text { grid-column: 1; max-width: 40em; color: var(--muted); }
+.door-arrow { grid-column: 2; grid-row: 1 / span 2; width: 34px; height: 34px; color: var(--tone-text); }
+
+/* ------------------------------------------------------------ pages of their own (since version 2.00) */
+.page-head { padding-block: clamp(40px, 6vw, 88px) clamp(40px, 5vw, 72px); }
+/* The text, with the page's picture beside it, as on the home page: on the right in English, on the left in
+   Persian and Arabic. On narrower screens the picture goes under the text, smaller. */
+.page-hero { display: flex; flex-wrap: wrap; align-items: center; gap: 32px 56px; }
+.page-hero-text { flex: 1 1 440px; min-width: 0; }
+.page-dish { flex: 0 1 400px; width: 100%; max-width: 400px; margin: 0; }
+@media (max-width: 899.98px) { .page-dish { flex-basis: 100%; max-width: min(300px, 72vw); margin-inline: auto; } }
+.page-dish-view { position: relative; width: 100%; aspect-ratio: 1 / 1; }
+.page-dish .dish-art, .page-cells { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+  font-family: var(--font-ui); font-size: 15px; font-weight: 600; color: var(--muted); }
+.crumbs li + li::before { content: '/'; margin-inline-end: 10px; color: var(--rule); }
+.crumbs a { display: inline-flex; align-items: center; min-height: 44px; }
+.crumbs [aria-current] { color: var(--ink); }
+.page-title {
+  margin: 12px 0 0; font-family: var(--font-display); font-weight: var(--w-h2);
+  font-size: var(--size-h2); line-height: var(--lh-h2); letter-spacing: var(--track-head);
+  font-variation-settings: 'opsz' var(--opsz-head, 14);
+}
+.page-title:focus { outline: none; }
+.page-lead { display: block; margin-top: 24px; }
+.page-about { margin: 28px 0 0; max-width: 46em; padding: 14px 18px; border-inline-start: 4px solid var(--violet);
+  background: var(--tint); border-radius: 0 12px 12px 0; font-size: 15px; color: var(--muted); }
+[dir="rtl"] .page-about { border-radius: 12px 0 0 12px; }
+.page-about strong { color: var(--ink); }
+.books { margin-top: 32px; }
+.book .entry-year { font-size: clamp(40px, 2vw + 26px, 52px); }
+.book h3 cite { font-style: normal; }
+[dir="rtl"] .book h3 { text-align: right; }   /* an English title on a Persian or Arabic page keeps to the right edge */
+/* The labels on the items and in the table (since version 2.00, Ali's choice): outlined in the field's colour, with no
+   fill; the words of free items (free, free after registering, open access) take that colour too, paid ones keep the
+   ordinary text colour. "Start here" is solid: it marks the one item to begin with in each field. */
+.book .badge, .where .badge { border-color: var(--tone-text); }
+.book .badge-start { background: var(--tone-chip); color: var(--tone-chip-fg); border-color: var(--tone-chip); }
+.book .badge-free, .where .badge-free { border-color: var(--tone-text); color: var(--tone-text); }
+/* Persian and Arabic: an item that also has an edition in the page's language. */
+.book .badge-lang { border-color: var(--violet); color: var(--violet-text); }
+/* The table "Where to get them". The two short columns have set widths, so publisher names and access labels keep to
+   one line on computers and tablets, and both are centred (Ali's choice); the titles take the rest, and long titles
+   break into even lines. Every cell of a row is centred vertically too (Ali's choice, 28 October 2026), so a publisher
+   and a label sit at the middle of a title of two or three lines, and a title at the middle of a publisher with an
+   edition under it. */
+.where-wrap { margin-top: 32px; overflow-x: auto; }
+.where { width: 100%; border-collapse: collapse; font-size: 15px; }
+.where th, .where td { padding: 12px 14px; border-bottom: 1px solid var(--rule); text-align: start; vertical-align: top; }
+.where thead th { font-family: var(--font-ui); font-size: 14px; font-weight: 700; color: var(--muted); border-bottom: 2px solid var(--ink); }
+.where thead th:nth-child(2) { width: 30%; }
+.where thead th:nth-child(3) { width: 1%; white-space: nowrap; }
+.where thead th:nth-child(n+2), .where .where-get, .where .where-access { text-align: center; }
+.where tbody tr:not(.where-field) > * { vertical-align: middle; }
+.where tbody th { font-weight: 600; line-height: 1.5; text-wrap: balance; }
+.where tbody th cite { font-style: normal; }
+.where a { font-weight: 700; }
+.where .where-get a { display: inline-flex; justify-content: center; min-height: 24px; text-align: center; }
+/* An authorized Persian or Arabic edition: a smaller link under its publisher, in the violet of "also in Persian". */
+.where .where-ed { display: block; margin-top: 4px; }
+.where .where-ed a { font-size: 14px; font-weight: 600; color: var(--violet-text); text-decoration-color: var(--violet); }
+.where .where-access { white-space: nowrap; }
+.where .badge { min-height: 26px; padding: 0 10px; white-space: nowrap; }
+.where tr:target { background: var(--tint); }
+/* The name of each field, above its rows, in the field's colour. */
+.where .where-field th { padding-top: 26px; font-family: var(--font-ui); font-size: 14px; font-weight: 700; color: var(--tone-text);
+  border-bottom: 2px solid var(--tone); }
+.where tr { scroll-margin-top: 110px; }
+.book { scroll-margin-top: 110px; }
+.page-end { padding-block: 32px 56px; border-top: 1px solid var(--rule); font-size: 15px; color: var(--muted); }
+.page-end p { margin: 6px 0 0; }
+.page-end a { font-weight: 700; color: var(--ink); }
+.page-draft { color: var(--coral-text); font-weight: 700; }
+@media (max-width: 599.98px) {
+  /* Phones: each item is two lines, its title across the width, then where to get it at the start and access at the
+     end, centred on each other (with an edition under the publisher, the label sits at the middle of the two), so
+     nothing needs scrolling sideways. The column names are kept for screen readers only, and the table's roles (in
+     the page) keep it a table for them. */
+  .where-wrap { overflow-x: visible; }
+  .where, .where tbody, .where tr, .where th, .where td { display: block; }
+  .where thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .where tbody tr:not(.where-field) {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 16px;
+    padding: 12px 0 14px; border-bottom: 1px solid var(--rule);
+  }
+  .where tbody tr:not(.where-field) > * { padding: 0; border: 0; }
+  .where tbody tr:not(.where-field) > th { grid-column: 1 / -1; margin-bottom: 8px; }
+  .where .where-get, .where .where-access { text-align: start; }
+  .where .where-get a { justify-content: flex-start; text-align: match-parent; }
+  .where .where-field th { padding: 26px 0 10px; }
 }
 
 /* ------------------------------------------------------------ motion preferences */
