@@ -89,6 +89,7 @@
   function menuOpen() { return !!(menu && menu.classList.contains('open')); }
   function setMenu(open) {
     if (!menuToggle || !menu) return;
+    if (open) markHere(true);   // where you are (below), fresh as the menu opens
     menu.classList.toggle('open', open);
     menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
@@ -263,6 +264,51 @@
     var y = r.top + window.pageYOffset + (frac ? frac * r.height : -gap) - (Masthead.height() + 8);
     return Math.max(0, Math.round(y));
   }
+
+  // ---------------------------------------------------------------- where you are, in the menu
+  // (3.00, Ali's choices) On the home page, the menu's item for the section you are reading (the one at the first line
+  // below the header; Home at the top, Contact at the very end) is marked "is-here", and the style sheet underlines it
+  // in its own colour: in the top bar on computers, as the page scrolls, and in the phone menu, when it opens. In the
+  // activities, Explore & learn is marked too, with Activities under it. Screen readers hear "current location" (Home
+  // keeps "current page" on the home page). A page of its own was marked when it was built (aria-current="page" and
+  // Explore & learn's is-current), so nothing changes there.
+  var HERE_ITEMS = { top: 'nav-home', work: 'nav-work', expertise: 'nav-expertise', experience: 'nav-experience',
+                     explore: 'nav-sub-activities', contact: 'nav-contact' };
+  var hereNow = null;
+  function placeNow() {
+    var root = doc.documentElement;
+    if (window.pageYOffset < 2) return 'top';
+    if (window.pageYOffset + window.innerHeight >= root.scrollHeight - 2) return 'contact';
+    var line = Masthead.bottom() + 8;
+    for (var s = 0; s < SECTION_IDS.length; s++) {
+      var section = doc.getElementById(SECTION_IDS[s]);
+      if (section && section.getBoundingClientRect().bottom > line) return SECTION_IDS[s];
+    }
+    return null;
+  }
+  function markHere(fresh) {
+    if (!menu || $('main[data-sections]')) return;
+    var id = placeNow();
+    if (id === hereNow && !fresh) return;
+    hereNow = id;
+    $all('.is-here', menu).forEach(function (li) { li.classList.remove('is-here'); });
+    $all('a[aria-current="location"]', menu).forEach(function (a) { a.removeAttribute('aria-current'); });
+    var li = HERE_ITEMS[id] && $('.site-nav .' + HERE_ITEMS[id], menu);
+    if (!li) return;
+    li.classList.add('is-here');
+    var a = $('a', li);
+    if (a && !a.hasAttribute('aria-current')) a.setAttribute('aria-current', 'location');
+    if (id === 'explore') { var ex = $('.nav-explore', menu); if (ex) ex.classList.add('is-here'); }
+  }
+  var hereTicking = false;
+  on(window, 'scroll', function () {
+    if (hereTicking) return;
+    hereTicking = true;
+    window.requestAnimationFrame(function () { hereTicking = false; markHere(); });
+  }, { passive: true });
+  on(window, 'resize', function () { markHere(); });
+  on(window, 'load', function () { markHere(); });
+  markHere();
 
   // ---------------------------------------------------------------- logo animation in the specimen dish
   // The logo builds itself with its true transparency, in one of three ways, tried in this order:
@@ -773,16 +819,25 @@
   // A burst of cells for a right answer: about 0.6 seconds, in time with the sound. Small cells in the
   // site's five colours spring from the answer's tick (or its middle) and fade, like the cells in the
   // specimen dish. Nothing moves with reduced motion, and the "Correct." text always shows.
-  var reduceMotion = media('(prefers-reduced-motion: reduce)');
+  // (3.00, Ali's report) The cells are part of the page: they play in a band across it at the answer, so they
+  // stay on the answer if the page moves meanwhile (under a finger, or to show a button). They used to be
+  // placed on the window, and stayed behind when the page moved. The band is clipped to its own edges and to
+  // the page, so the cells never make the page wider or longer.
+  var BURST_REACH = 72;   // from the middle of the band to its edge: a cell's longest way (55 px) and its size, with room
   function burst(el) {
     if (!el || reduceMotion.matches || !el.animate) return;
     var mark = $('.mark-right', el);
     var r = (mark && mark.getBoundingClientRect().width ? mark : el).getBoundingClientRect();
-    var x = r.left + r.width / 2;
-    var y = r.top + r.height / 2;
+    var x = r.left + r.width / 2 + window.pageXOffset;   // the answer's tick, on the page
+    var pageY = r.top + r.height / 2 + window.pageYOffset;
+    var top = Math.max(0, Math.round(pageY - BURST_REACH));
+    var bottom = Math.min(doc.documentElement.scrollHeight, Math.round(pageY + BURST_REACH));
+    var y = pageY - top;                                 // the tick, in the band
     var layer = doc.createElement('div');
     layer.className = 'burst';
     layer.setAttribute('aria-hidden', 'true');
+    layer.style.top = top + 'px';
+    layer.style.height = Math.max(0, bottom - top) + 'px';
     var tones = ['teal', 'coral', 'magenta', 'gold', 'violet'];
     var n = 14;
     for (var k = 0; k < n; k++) {
@@ -1216,10 +1271,47 @@
         announce(spokenText(feedback) + ' ' + progress.textContent);
         Sound.play(right ? 'right' : 'again');
         if (right) burst(b);
-        // The answers are now locked: the keyboard moves on to the button that goes on.
-        if (g.contains(doc.activeElement)) nextBtn.focus();
+        // The answers are now locked: the keyboard moves on to the button that goes on. (A tap or click on an
+        // answer puts the keyboard there too, on Android and in most browsers on computers.) Since 3.00 the
+        // browser doesn't move the page for it (it put the button in the middle of the screen, a long jump
+        // on a phone, during the burst): the page shows the button itself, after the burst.
+        if (g.contains(doc.activeElement)) {
+          try { nextBtn.focus({ preventScroll: true }); } catch (e) { nextBtn.focus(); }
+          showNext();
+        }
       });
     });
+    // (3.00, Ali's report) After an answer that moved the keyboard to Next: if Next is below the bottom of the
+    // window, the page glides down just far enough to show it, 24 px above the bottom, but never so far that the
+    // start of the explanation leaves the top (the header slides away for it, as for the menu's links). It waits
+    // a moment first, the length of the burst, so the answers show the result (and a right one its burst)
+    // while the page is still; with reduced motion it moves at once. It stays still if the reader touches,
+    // scrolls, clicks or types meanwhile, or goes on.
+    var NEXT_WAIT = 600;    // the burst's length (burst, above)
+    var waiting = null;
+    function showNext() {
+      if (waiting) waiting.stop();
+      var timer = 0;
+      var types = ['pointerdown', 'touchstart', 'wheel', 'keydown'];
+      function stop() {
+        clearTimeout(timer);
+        types.forEach(function (type) { window.removeEventListener(type, stop, true); });
+        waiting = null;
+      }
+      types.forEach(function (type) { on(window, type, stop, { capture: true, passive: true }); });
+      waiting = { stop: stop };
+      timer = setTimeout(function () {
+        stop();
+        if (!answered || nextBtn.hidden) return;
+        var view = window.innerHeight || doc.documentElement.clientHeight;
+        var by = Math.min(nextBtn.getBoundingClientRect().bottom + 24 - view, feedback.getBoundingClientRect().top - 16);
+        if (by < 4) return;
+        var y = Math.round(window.pageYOffset + by);
+        Masthead.away();
+        if (reduceMotion.matches) jumpTo(y);
+        else try { window.scrollTo({ top: y, left: 0, behavior: 'smooth' }); } catch (e) { jumpTo(y); }
+      }, reduceMotion.matches ? 0 : NEXT_WAIT);
+    }
     on(nextBtn, 'click', function () {
       step += 1;
       answered = false;
@@ -1256,11 +1348,9 @@
     };
   })();
 
-  // Quick quiz
-  (function () {
-    var panel = $('#act-quiz');
-    if (!panel) return;
-    var form = $('[data-quiz]', panel);
+  // Quick quiz, and since version 3.00 the quiz of Standards in medicine (on its own page): one question at a
+  // time, with the answer and its explanation once checked, and the score at the end.
+  function Quiz(form) {
     var questions = $all('.question', form);
     var progress = $('[data-quiz-progress]', form);
     var reminder = $('[data-quiz-reminder]', form);
@@ -1336,7 +1426,7 @@
       if (first) first.focus();
     });
     render();
-    activities.quiz = {
+    return {
       state: function () { return { step: checked ? current + 1 : current, score: correct }; },
       restore: function (st) {
         if (!st || !(st.step >= 0) || st.step > total) return;
@@ -1345,6 +1435,59 @@
         render();
       }
     };
+  }
+  (function () {
+    var panel = $('#act-quiz');
+    if (panel) activities.quiz = Quiz($('[data-quiz]', panel));        // the home page keeps its place (see the end)
+    $all('form[data-quiz]').forEach(function (form) { if (!panel || !panel.contains(form)) Quiz(form); });
+  })();
+
+  // ---------------------------------------------------------------- Standards in Medicine: the editions' small cards
+  // (Since version 3.00, Ali's idea of 28 October 2026.) In the table, each Persian or Arabic edition has a small (i)
+  // whose card gives the edition's number and the international edition it is based on. It floats under the line
+  // while the pointer rests on the (i) for a moment, or while the keyboard is on it ("is-open"); a tap or a click
+  // opens it in the line's place instead, moving what follows down so it never hides the next edition ("is-pinned"),
+  // until another tap, a tap elsewhere or Escape. One card at a time. Screen readers hear it with the button
+  // (aria-describedby); without scripts it is a line under the edition (the style sheet).
+  (function () {
+    var lines = $all('.has-tip');
+    if (!lines.length) return;
+    var current = null, timer = null;
+    function button(l) { return $('.ed-info', l); }
+    function set(l, state) {        // state: '' (closed), 'is-open' (floating) or 'is-pinned' (in the line's place)
+      clearTimeout(timer);
+      if (state && current && current !== l) set(current, '');
+      l.classList.remove('is-open', 'is-pinned');
+      if (state) l.classList.add(state);
+      button(l).setAttribute('aria-expanded', state ? 'true' : 'false');
+      current = state ? l : (current === l ? null : current);
+    }
+    function pinned(l) { return l.classList.contains('is-pinned'); }
+    lines.forEach(function (l) {
+      var b = button(l);
+      on(b, 'click', function () { set(l, pinned(l) ? '' : 'is-pinned'); });
+      on(b, 'pointerenter', function (ev) {
+        if (ev.pointerType !== 'mouse' || current === l) return;
+        clearTimeout(timer);
+        timer = setTimeout(function () { set(l, 'is-open'); }, 350);
+      });
+      on(l, 'pointerleave', function (ev) {
+        if (ev.pointerType !== 'mouse') return;
+        clearTimeout(timer);
+        if (current === l && !pinned(l)) timer = setTimeout(function () { if (!pinned(l)) set(l, ''); }, 200);
+      });
+      on(b, 'focus', function () { if (current !== l && b.matches(':focus-visible')) set(l, 'is-open'); });
+      on(b, 'blur', function () { if (current === l && !pinned(l)) set(l, ''); });
+    });
+    on(doc, 'keydown', function (ev) {
+      if (ev.key === 'Escape' && current) { var l = current; set(l, ''); button(l).focus(); }
+    });
+    // A press elsewhere closes the open card; a press on another (i) leaves it to that (i)'s click, which opens its own
+    // card and closes this one: closing it at the press would move that (i) away from under the pointer before the
+    // release, when a card open in its line's place is above it (29 October 2026).
+    on(doc, 'pointerdown', function (ev) {
+      if (current && !current.contains(ev.target) && !(ev.target.closest && ev.target.closest('.ed-info'))) set(current, '');
+    });
   })();
 
   // ---------------------------------------------------------------- Explore & learn menu: one activity at a time

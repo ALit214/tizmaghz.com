@@ -208,7 +208,21 @@ main:focus, .hero-name:focus { outline: none; }
   font-family: var(--font-ui); font-size: 15px; font-weight: 600; white-space: nowrap; text-decoration: none;
   text-decoration-thickness: 2px; text-underline-offset: 6px;
 }
-.site-nav a:hover, .nav-explore-toggle:hover { text-decoration: underline; text-decoration-color: var(--teal); }
+/* Each item's own colour (since version 3.00): its circle in the phone menu, and its underline, under the pointer and
+   where you are. Home's is the text colour, Home's alone by Ali's rule (see the phone menu below). */
+.nav-home > a { --dot: var(--ink); }
+.nav-work > a { --dot: var(--teal); }
+.nav-expertise > a { --dot: var(--coral); }
+.nav-experience > a { --dot: var(--magenta); }
+.nav-explore { --dot: var(--gold); }
+.nav-sub-page > a { --dot: var(--tone); }
+.nav-contact > a { --dot: var(--violet); }
+.site-nav a:hover, .nav-explore-toggle:hover { text-decoration: underline; text-decoration-color: var(--dot, var(--teal)); }
+/* Where you are (Ali's choice, 28 October 2026, for version 3.00): on the home page site.js marks the item of the
+   section you are reading (is-here: Home at the top, Contact at the very end, Explore & learn's button in the
+   activities), underlined in its own colour; on computers it follows the page as it scrolls, in the phone menu it
+   is set as the menu opens. */
+.site-nav li.is-here > a, .nav-explore.is-here > .nav-explore-toggle { text-decoration: underline; text-decoration-color: var(--dot, var(--teal)); }
 /* Explore & learn (since version 2.00): on computers a button that opens a short list, the activities and the pages
    of their own; on a page of its own it is underlined in its colour, as the part of the site you are in. */
 .nav-explore { position: relative; }
@@ -218,8 +232,10 @@ main:focus, .hero-name:focus { outline: none; }
 .nav-explore.is-current > a, .nav-explore.is-current > button { text-decoration: underline; text-decoration-color: var(--gold); }
 .nav-explore-label { display: none; }   /* the list's name on phones (below) */
 @media (min-width: 760px) {
-  /* The list under Explore & learn's button: each item with a dot in its colour (the activities gold, as the
-     section; a page, its door's colour); the page you are on is shaded. */
+  /* The list under Explore & learn's button: each item with an open circle in its colour (the activities gold, as the
+     section; a page, its door's colour), as on phones. Since version 3.00 (Ali's choice, 28 October 2026), where you
+     are is underlined in its colour, like the menu's other items (until then it was shaded and bold), and an item is
+     lit only under the pointer, in a soft tint of its own colour (until then grey). */
   .js .nav-explore-link { display: none; }
   .js .nav-sub {
     display: none; position: absolute; top: calc(100% + 4px); inset-inline-start: -14px; z-index: 3; min-width: 250px;
@@ -228,10 +244,12 @@ main:focus, .hero-name:focus { outline: none; }
   }
   .js .nav-explore.open .nav-sub { display: grid; gap: 2px; }
   .js .nav-sub a { display: flex; gap: 12px; width: 100%; padding: 0 14px; border-radius: 12px; }
-  .js .nav-sub a::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--tone); }
-  .js .nav-sub-activities a::before { background: var(--gold); }
-  .js .nav-sub a:hover { background: var(--tint); text-decoration: none; }
-  .js .nav-sub a[aria-current="page"] { background: var(--tint); font-weight: 700; }
+  .js .nav-sub a::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--tone); }
+  .js .nav-sub-activities a::before { border: 2px solid var(--gold); }   /* (its item has no --tone of its own) */
+  .js .nav-sub a:hover { background: var(--tone-soft); text-decoration: none; }
+  .js .nav-sub-activities a:hover { background: var(--gold-soft); }
+  .js .nav-sub a[aria-current="page"], .js .nav-sub li.is-here > a,
+  .js .nav-sub a[aria-current="page"]:hover, .js .nav-sub li.is-here > a:hover { text-decoration: underline; text-decoration-color: var(--dot); }
 }
 @media (min-width: 760px) {
   /* Without the script the button can't open the list: on computers Explore & learn is then a link, and the pages
@@ -309,14 +327,14 @@ main:focus, .hero-name:focus { outline: none; }
     font-family: var(--font-display); font-size: 26px; font-weight: var(--w-menu); white-space: normal;
   }
   .site-nav a::before { content: ''; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--dot, var(--teal)); }
-  /* Each section keeps its colour; Home is a ring. */
-  .nav-home > a::before { background: transparent; box-shadow: inset 0 0 0 2.5px var(--ink); }
-  .nav-work > a { --dot: var(--teal); }
-  .nav-expertise > a { --dot: var(--coral); }
-  .nav-experience > a { --dot: var(--magenta); }
-  .nav-contact > a { --dot: var(--violet); }
+  /* Each section keeps its colour (its item's --dot, set above). Home's circle is filled in the text colour: white in
+     the dark theme, near-black in the light one (Ali's choice, 28 October 2026, for version 3.00; until then it was a
+     ring). Ali's rule: Home's is the only circle in that colour, ever; no other or new item or button may take it,
+     for a filled circle or an open one: each has a colour of its own. (tests/menu_and_scrolling.py checks this.) */
   /* Explore & learn heads its list, as on computers (Ali's choice, 28 October 2026): its name, in its colour but not a
-     link, then the activities and the pages of their own under it, smaller. Each row leads to one place. */
+     link, then the activities and the pages of their own under it, smaller. Each row leads to one place. The items
+     under it have open circles, in their colours (Ali's idea, 28 October 2026, for version 3.00), as the inner items
+     of a list within a list do; the menu's own items keep filled ones. */
   .nav-explore-toggle, .site-nav .nav-explore-link { display: none; }
   .nav-explore-label {
     display: flex; align-items: center; gap: 14px; min-height: 56px; width: 100%;
@@ -324,10 +342,15 @@ main:focus, .hero-name:focus { outline: none; }
   }
   .nav-explore-label::before { content: ''; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--gold); }
   .nav-sub a { min-height: 50px; padding-inline-start: 28px; font-family: var(--font-ui); font-size: 18px; font-weight: 700; }
-  .nav-sub a::before { width: 10px; height: 10px; background: var(--tone); }
-  .nav-sub .nav-sub-activities a::before { background: var(--gold); }
-  /* The page you are on is underlined in its colour. */
+  .nav-sub a::before { width: 10px; height: 10px; background: transparent; border: 2px solid var(--tone); }
+  .nav-sub .nav-sub-activities a::before { border: 2px solid var(--gold); }
+  /* Where you are is underlined in the colour of its item's circle (Ali's choice, 28 October 2026, for version 3.00;
+     until then only the page of its own you were on): the section you are reading when the menu opens (above), on a
+     page of its own the page, and Explore & learn's name, in gold, while you are in its part of the site. */
   .nav-sub a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--tone); }
+  .nav-explore.is-here > .nav-explore-label, .nav-explore.is-current > .nav-explore-label {
+    text-decoration: underline; text-decoration-color: var(--gold); text-decoration-thickness: 2px; text-underline-offset: 6px;
+  }
   .controls { justify-content: space-between; }
   .lang-switch a, .lang-current { min-height: 44px; }
   .theme-switch button { width: 44px; height: 44px; }
@@ -626,8 +649,10 @@ main:focus, .hero-name:focus { outline: none; }
 .feedback[data-result="wrong"] { background: var(--coral-soft); }
 .verdict { font-weight: 700; }
 /* The burst of cells for a right answer (site.js): small cells in the five colours, like those in the
-   specimen dish. The layer covers the window, lets every tap through, and is removed after the burst. */
-.burst { position: fixed; inset: 0; z-index: 40; overflow: hidden; pointer-events: none; }
+   specimen dish. Since version 3.00 the layer is a band across the page at the answer (site.js sets its top and
+   height), so the cells move with the page; it lets every tap through, never anchors the page's scrolling,
+   and is removed after the burst. */
+.burst { position: absolute; left: 0; right: 0; z-index: 40; overflow: hidden; pointer-events: none; overflow-anchor: none; }
 .burst-cell {
   position: absolute; border-radius: 50%;
   background: radial-gradient(circle at 34% 34%, rgba(255, 255, 255, 0.85) 0 18%, rgba(255, 255, 255, 0) 30%), var(--tone);
@@ -972,16 +997,16 @@ main:focus, .hero-name:focus { outline: none; }
 /* The labels on the items and in the table (since version 2.00, Ali's choice): outlined in the field's colour, with no
    fill; the words of free items (free, free after registering, open access) take that colour too, paid ones keep the
    ordinary text colour. "Start here" is solid: it marks the one item to begin with in each field. */
-.book .badge, .where .badge { border-color: var(--tone-text); }
+.book .badge, .where .badge, .standard .badge { border-color: var(--tone-text); }
 .book .badge-start { background: var(--tone-chip); color: var(--tone-chip-fg); border-color: var(--tone-chip); }
-.book .badge-free, .where .badge-free { border-color: var(--tone-text); color: var(--tone-text); }
+.book .badge-free, .where .badge-free, .standard .badge-free { border-color: var(--tone-text); color: var(--tone-text); }
 /* Persian and Arabic: an item that also has an edition in the page's language. */
-.book .badge-lang { border-color: var(--violet); color: var(--violet-text); }
+.book .badge-lang, .standard .badge-lang { border-color: var(--violet); color: var(--violet-text); }
 /* The table "Where to get them". The two short columns have set widths, so publisher names and access labels keep to
    one line on computers and tablets, and both are centred (Ali's choice); the titles take the rest, and long titles
    break into even lines. Every cell of a row is centred vertically too (Ali's choice, 28 October 2026), so a publisher
    and a label sit at the middle of a title of two or three lines, and a title at the middle of a publisher with an
-   edition under it. */
+   edition under it. (Phones lay each row out differently: see the end of this part.) */
 .where-wrap { margin-top: 32px; overflow-x: auto; }
 .where { width: 100%; border-collapse: collapse; font-size: 15px; }
 .where th, .where td { padding: 12px 14px; border-bottom: 1px solid var(--rule); text-align: start; vertical-align: top; }
@@ -1011,14 +1036,15 @@ main:focus, .hero-name:focus { outline: none; }
 .page-draft { color: var(--coral-text); font-weight: 700; }
 @media (max-width: 599.98px) {
   /* Phones: each item is two lines, its title across the width, then where to get it at the start and access at the
-     end, centred on each other (with an edition under the publisher, the label sits at the middle of the two), so
-     nothing needs scrolling sideways. The column names are kept for screen readers only, and the table's roles (in
-     the page) keep it a table for them. */
+     end, so nothing needs scrolling sideways. The label sits at the bottom, beside the last line of where to get it
+     (Ali's choice, 28 October 2026, for version 3.00): beside an edition under the publisher, or the end of a
+     publisher's name on two lines, as in the rows of one line. The column names are kept for screen readers only,
+     and the table's roles (in the page) keep it a table for them. */
   .where-wrap { overflow-x: visible; }
   .where, .where tbody, .where tr, .where th, .where td { display: block; }
   .where thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .where tbody tr:not(.where-field) {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 16px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 16px;
     padding: 12px 0 14px; border-bottom: 1px solid var(--rule);
   }
   .where tbody tr:not(.where-field) > * { padding: 0; border: 0; }
@@ -1027,6 +1053,180 @@ main:focus, .hero-name:focus { outline: none; }
   .where .where-get a { justify-content: flex-start; text-align: match-parent; }
   .where .where-field th { padding: 26px 0 10px; }
 }
+
+/* ------------------------------------------------------------ Standards in medicine (since version 3.00) */
+/* What a standard is, and the two parts after it: each heading beside its paragraphs, between thin rules, as the
+   cards below have their number beside them; on narrower screens the heading goes above its paragraphs. */
+.primer-row { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 14px 56px; padding-block: 34px 38px; border-top: 1px solid var(--rule); }
+.primer-row:first-child { padding-top: 0; border-top: 0; }
+.primer-row:last-child { padding-bottom: 0; }
+.primer-title {
+  margin: 0; font-family: var(--font-display); font-weight: var(--w-h2);
+  font-size: clamp(28px, 1.5vw + 18px, 40px); line-height: 1.12; letter-spacing: var(--track-head);
+  font-variation-settings: 'opsz' var(--opsz-head, 14);
+}
+.primer-text p { margin: 0; max-width: 40em; }
+.primer-text p + p { margin-top: 14px; }
+@media (max-width: 899.98px) { .primer-row { grid-template-columns: minmax(0, 1fr); } }
+/* The cards, as the entries of Books & Guidelines, in their family's colour: the standard's number big where a book
+   shows its year (the publisher's name small above it; the card's heading says both, for screen readers), the
+   official title and current edition in English, then what it covers, who uses it and why it matters. */
+.standards { margin-top: 32px; container: std-cards / inline-size; }
+/* A head for each standard on a card (Ali's design for a card of two standards, 29 October 2026): its number beside
+   its name, official title and edition, as a book's year beside its title; then the text, once, under the names. A
+   second head comes a little closer to the first than the text does to it, so the two read as a pair and the text
+   as theirs. Narrower than the two columns need (as a book's entry wraps), each number goes above its name. */
+.standard { display: block; scroll-margin-top: 110px; }
+.std-head[id] { scroll-margin-top: 110px; }
+.standard .entry-mark { display: flex; flex-direction: column; gap: 4px; }
+.std-name { margin-top: 10px; }
+.std-head + .std-head { margin-top: 22px; }
+.std-pair .entry-text { margin-top: 34px; }
+@container std-cards (min-width: 728px) {
+  .std-head { display: grid; grid-template-columns: 220px minmax(0, 1fr); column-gap: 48px; align-items: start; }
+  .std-name { margin-top: 0; }
+  .std-head + .std-head { margin-top: 20px; }
+  .standard > .entry-body { margin-inline-start: 268px; }
+}
+.std-body { font-family: var(--font-latin); font-size: 15px; font-weight: 700; letter-spacing: 0.04em; color: var(--tone-text); }
+.std-number {
+  font-family: var(--font-num); font-weight: var(--w-year); font-size: clamp(34px, 1.2vw + 25px, 44px);
+  line-height: 1.05; letter-spacing: var(--track-head); color: var(--tone-text); font-variant-numeric: lining-nums;
+  white-space: nowrap; font-variation-settings: 'opsz' var(--opsz-head, 14);
+}
+[dir="rtl"] .std-mark > span { text-align: right; }   /* a reference keeps its own order, at the page's start edge */
+[dir="rtl"] .standard h3 { text-align: right; }
+/* The official title right under the card's heading, as its subtitle (Ali's design, 29 October 2026), then the
+   current edition. */
+.standard h3 + .cite { margin-top: -2px; }
+.std-edition { margin: 6px 0 0; font-family: var(--font-ui); font-size: 14px; color: var(--muted); }
+.std-label { font-weight: 700; color: var(--ink); }
+.std-part { margin: 12px 0 0; max-width: 40em; }
+.std-part strong { color: var(--tone-text); }
+.std-quiz .quiz { margin-top: 32px; }
+.ref { white-space: nowrap; }      /* a reference in the text (ISO 13485) stays on one line */
+/* The table (Ali's layout, 29 October 2026): as the one of Books & Guidelines, with a row for each source of a
+   standard beside the standard, which spans them: the publisher, then each official Persian or Arabic edition, each
+   a short line with its own label in the Access column. Lines and labels are the same height, so a source and its
+   label meet at every width and in every language, and there is no rule between one standard's sources. */
+.where-standards .src { display: block; position: relative; }
+.where-standards .src-name, .where-standards .src-acc { display: flex; align-items: center; justify-content: center; min-height: 30px; }
+@media (min-width: 600px) {
+  .where-standards .src-row:not(.src-last) > td { padding-bottom: 2px; border-bottom: 0; }
+  .where-standards .src-row:not(.src-first) > td { padding-top: 2px; }
+}
+/* The three editions alike (English, Persian, Arabic: Ali, 29 October 2026): smaller links in the violet of "also in
+   Persian", as the editions on Books & Guidelines. */
+.where-standards .src a { font-size: 14px; font-weight: 600; color: var(--violet-text); text-decoration-color: var(--violet); }
+/* When the card under an edition is open in the line's place (after a tap or a click), and without scripts, where
+   it is always a line under the edition, the row's cells keep to the top, so the label stays beside its line. */
+.where-standards .src-row:has(.is-pinned) > td, .no-js .where-standards .src-row > td { vertical-align: top; }
+/* A row the page was opened at (a card's "Where to get it"): the standard with all its sources; from a card of two
+   standards ("Where to get them": Ali, 29 October 2026), both of them, as one block, with the line between them
+   kept. That is every row after the one opened at (lit by .where tr:target above), up to the next standard that does
+   not share its card (the rows of a standard that shares the card above are marked shares-card: build.py,
+   std_where). The same soft grey as on Books & Guidelines, not the family's colour (Ali: "there is too much color"). */
+.where-standards tr:target ~ tr:not(.src-first:not(.shares-card)):not(tr:target ~ .src-first:not(.shares-card) ~ tr) { background: var(--tint); }
+/* Each standard's name leads back to its card (Ali, 29 October 2026): the name as it was, in the weight of the
+   table's names, with a plain link's underline, and at least 24 pixels tall for a fingertip. */
+.where-standards tbody th .to-card { display: inline-flex; align-items: center; min-height: 24px; font-weight: inherit; }
+/* The small (i) of an edition, like a footnote's mark (Ali's choice, 29 October 2026): small and raised, just after
+   the edition's name and outside it, so the names of all the sources are centred alike. The mark is small, but its
+   button is as tall as the line and wide enough for a fingertip (26 by 30 pixels), beside the name, not over it.
+   Its card gives the edition's number and what it is based on (assets/js/site.js): it floats under the line, across
+   the cell, while the pointer rests on the (i) or the keyboard is on it, and opens in the line's place, moving what
+   follows down, with a tap or a click, so it never hides the next edition. Without scripts it is a small line under
+   the edition. */
+.where-standards .src-ed .src-name { position: relative; width: max-content; margin-inline: auto; }
+.ed-info {
+  position: absolute; inset-inline-start: 100%; top: 50%; translate: 0 -50%;
+  display: grid; justify-items: start; align-items: start; width: 26px; height: 30px; padding: 3px 0 0 0;
+  padding-inline-start: 2px; border: 0; background: transparent; color: var(--muted); cursor: pointer;
+}
+.ed-info .icon { width: 14px; height: 14px; border-radius: 50%; stroke-width: 2.2; }
+.ed-info:hover, .is-open .ed-info, .is-pinned .ed-info { color: var(--tone-text); }
+.ed-info:hover .icon, .is-open .ed-info .icon, .is-pinned .ed-info .icon { background: var(--tone-soft); box-shadow: 0 0 0 3px var(--tone-soft); }
+.ed-info:focus-visible { outline: none; }
+.ed-info:focus-visible .icon { outline: 2px solid var(--tone); outline-offset: 3px; }
+.ed-tip { display: block; margin-top: 2px; font-size: 14px; color: var(--muted); }
+.js .ed-tip {
+  display: none; width: max-content; max-width: min(100%, 340px); margin: 6px auto 2px; padding: 10px 14px;
+  border-radius: 12px; background: var(--ink); color: var(--bg); font-family: var(--font-ui); font-size: 14px;
+  line-height: 1.5; text-align: center;
+}
+.js .is-open > .ed-tip {
+  display: block; position: absolute; z-index: 20; top: calc(100% + 2px); left: 0; right: 0; margin-top: 0;
+  box-shadow: 0 10px 28px rgba(23, 18, 43, 0.22);
+}
+.js .is-pinned > .ed-tip { display: block; }
+/* The (i) in the table's introduction, as in the table. */
+.i-mark .icon { width: 1.1em; height: 1.1em; vertical-align: -0.2em; color: var(--muted); }
+/* Phones: under the standard's name, each source on a line of its own at the start, its label at the end. */
+@media (max-width: 599.98px) {
+  .where-standards tbody tr.src-row { align-items: start; }
+  .where-standards tbody tr.src-row:not(.src-last) { padding-bottom: 2px; border-bottom: 0; }
+  .where-standards tbody tr.src-row:not(.src-first) { padding-top: 2px; }
+  .where-standards .src-name { justify-content: flex-start; }
+  .where-standards .src-ed .src-name { margin-inline: 0; }
+  .js .ed-tip { margin-inline: 0; text-align: start; }
+}
+/* Where to start learning: free starting points, each a link with a coloured top edge, like the doors to these pages. */
+.starts { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.start { padding: 22px clamp(20px, 2.4vw, 30px) 26px; border-radius: 24px; border-top: 6px solid var(--tone); background: var(--bg); }
+.start-name {
+  display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-ui); font-size: 18px; font-weight: 700;
+  text-decoration: underline; text-decoration-color: var(--tone); text-decoration-thickness: 3px; text-underline-offset: 6px;
+}
+.start-name:hover { text-decoration-color: var(--ink); }
+.start p { margin: 6px 0 0; color: var(--muted); }
+
+/* ------------------------------------------------------------ the stories behind the pictures (since version 3.00) */
+/* Ali's ideas (28 and 30 October 2026): an easter egg. Each animated picture keeps all its stories, and each visit
+   shows the next one in a card under the picture, but only when the pointer rests still on the picture for about
+   two and a half seconds, a finger holds it as long, or the keyboard rests on it (assets/js/story.js). Nothing on
+   the picture hints at it; the keyboard's ring shows only while someone moves with the Tab key, as everywhere. The
+   card floats over what follows while it is open. The dish is dark in both themes, so the card keeps the dish's
+   own colours, as the logo's pause button does. Without scripts it never shows. */
+[data-story] { position: relative; }
+[data-story-pic] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+/* The keyboard's ring on these pictures is the one hint, and it is meant to catch the eye (Ali's wish, 30 October
+   2026): instead of the site's usual purple ring, a ring in the five colours of the cells, just outside the dish,
+   turning slowly (still with reduced motion). In Windows' high-contrast mode, a plain ring in the system's colour. */
+[data-story-pic]:focus { outline: none; }
+[data-story-pic]:focus-visible::after {
+  content: ''; position: absolute; inset: calc(3.4% - 9px); border-radius: 50%; padding: 4px; pointer-events: none;
+  background: conic-gradient(var(--teal), var(--coral), var(--magenta), var(--gold), var(--violet), var(--teal));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: story-ring 8s linear infinite;
+}
+@keyframes story-ring { to { rotate: 1turn; } }
+/* With reduced motion the ring stays still (the general rule below would only make it spin very fast). */
+@media (prefers-reduced-motion: reduce) { [data-story-pic]:focus-visible::after { animation: none !important; } }
+@media (forced-colors: active) {
+  [data-story-pic]:focus-visible { outline: 3px solid CanvasText; outline-offset: 3px; border-radius: 50%; }
+  [data-story-pic]:focus-visible::after { display: none; }
+}
+.nf-dish-view { position: absolute; inset: 0; }
+.story-card { display: none; }
+.js .story-card.is-open {
+  display: block; position: absolute; z-index: 30; top: calc(100% + 12px); left: 50%; translate: -50% 0;
+  width: min(360px, calc(100vw - 32px)); padding: 14px 18px 16px; border-radius: 16px;
+  border: 1px solid rgba(230, 195, 106, 0.6); background: #140B26; color: #EFE8F8;
+  box-shadow: 0 14px 34px rgba(12, 6, 24, 0.35); font-family: var(--font-text); font-size: 15px; line-height: 1.65;
+  text-align: start; animation: story-in 0.2s ease-out;
+}
+/* a small point towards the picture */
+.js .story-card.is-open::before {
+  content: ''; position: absolute; top: -7px; left: 50%; width: 12px; height: 12px; translate: -50% 0; rotate: 45deg;
+  background: #140B26; border-top: 1px solid rgba(230, 195, 106, 0.6); border-left: 1px solid rgba(230, 195, 106, 0.6);
+}
+.story-card p { margin: 0; }
+@keyframes story-in { from { opacity: 0; transform: translateY(-4px); } }
+/* The page-not-found page has a card in each language: only the visitor's shows. */
+:root[data-nf="en"] .story-card:not([lang="en"]),
+:root[data-nf="fa"] .story-card:not([lang="fa"]),
+:root[data-nf="ar"] .story-card:not([lang="ar"]) { display: none; }
 
 /* ------------------------------------------------------------ motion preferences */
 @media (prefers-reduced-motion: reduce) {

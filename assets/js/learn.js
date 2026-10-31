@@ -1,5 +1,6 @@
 /* The pages of their own (learn/...): the picture at the top of each page, drawn in the specimen dish of the
-   home page and the page-not-found page. Each page has its own (its canvas names it: data-art).
+   home page and the page-not-found page. Each page has its own (its canvas names it: data-art): Books &
+   Guidelines a shelf, Standards in Medicine (since version 3.00) a seal; see each one below.
 
    Books & Guidelines (Ali's choice, 27 October 2026, the second of three ideas he compared; the others are
    kept in the project's archive and in artifacts\books-pictures): a shelf appears in the dish, and one pale
@@ -246,9 +247,55 @@
     return { duration: 5.0, frame: frame };
   }
 
+  // ---------------------------------------------------------------- Standards in Medicine: a seal of cells
+  // (since version 3.00; Ali's choice of three ideas, 28 October 2026, who kept its straight tick after comparing
+  // three curved ones): one pale cell divides again and again, and the cells settle into a ring in the five
+  // families' colours, drawn round from the top the way the page reads (clockwise in English, the other way in
+  // Persian and Arabic), like a seal of approval; two thin edges close round it, and the last cells draw a tick
+  // inside it, stroke by stroke. The tick is the same in every language.
+  function seal(ctx, dir) {
+    var rnd = seeded(53);
+    var TONES = [COLORS.teal, COLORS.coral, COLORS.magenta, COLORS.gold, COLORS.violet];
+    var RING = 40, R = 192;
+    var places = [];
+    for (var k = 0; k < RING; k++) {
+      var a = -Math.PI / 2 + dir * (k / RING) * TAU;
+      places.push({ x: 300 + Math.cos(a) * R + (rnd() - 0.5) * 2, y: 300 + Math.sin(a) * R + (rnd() - 0.5) * 2, r: 9,
+                    color: rgb(TONES[Math.floor(k / (RING / TONES.length))]), arrive: 2.0 + 1.45 * (k / RING) + rnd() * 0.1 });
+    }
+    // the tick: a short stroke down to its corner, then a long one up, a cell every 14 units or so
+    var TICK = [{ x: 226, y: 300 }, { x: 278, y: 354 }, { x: 386, y: 236 }];
+    var dots = [];
+    for (var s = 0; s < 2; s++) {
+      var p0 = TICK[s], p1 = TICK[s + 1];
+      var n = Math.round(Math.hypot(p1.x - p0.x, p1.y - p0.y) / 14);
+      for (var i = s ? 1 : 0; i <= n; i++) dots.push({ x: p0.x + (p1.x - p0.x) * i / n, y: p0.y + (p1.y - p0.y) * i / n });
+    }
+    var white = rgb('#FFFFFF');
+    dots.forEach(function (d, i) {
+      places.push({ x: d.x, y: d.y, r: 8, color: white, arrive: 3.7 + 0.85 * (i / (dots.length - 1)) });
+    });
+    var cells = colony(places, { seed: 19, r0: 7 });
+    function frame(t) {
+      ctx.clearRect(0, 0, SIZE, SIZE);
+      // the seal's two thin edges, once the ring has closed
+      var a0 = clamp01((t - 3.35) / 0.8);
+      if (a0 > 0) {
+        ctx.lineWidth = 1.4;
+        [R - 26, R + 26].forEach(function (rr) {
+          ctx.strokeStyle = 'rgba(255,255,255,' + 0.42 * a0 + ')';
+          ctx.beginPath(); ctx.arc(300, 300, rr, 0, TAU); ctx.stroke();
+        });
+      }
+      cells.draw(ctx, t);
+    }
+    return { duration: 5.0, frame: frame };
+  }
+
   // ---------------------------------------------------------------- playing a picture
   kit.shelf = shelf;
-  var ART = { reading: shelf };
+  kit.seal = seal;
+  var ART = { reading: shelf, standards: seal };
   var ideas = window.pageArtIdeas || {};          // review copies can bring other pictures (see their page)
   Object.keys(ideas).forEach(function (k) { ART[k] = function (ctx, dir) { return ideas[k](ctx, dir, kit); }; });
 
