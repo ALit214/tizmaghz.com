@@ -89,7 +89,16 @@
   function menuOpen() { return !!(menu && menu.classList.contains('open')); }
   function setMenu(open) {
     if (!menuToggle || !menu) return;
-    if (open) markHere(true);   // where you are (below), fresh as the menu opens
+    if (open) {
+      markHere(true);   // where you are (below), fresh as the menu opens
+      // (3.01) reading Explore & Learn on the home page, its list unfolds, so that where you are shows in it
+      var ex = $('.nav-explore', menu);
+      if (ex && ex.classList.contains('is-here') && !ex.classList.contains('open')) {
+        ex.classList.add('open');
+        var b = $('.nav-explore-toggle', ex);
+        if (b) b.setAttribute('aria-expanded', 'true');
+      }
+    }
     menu.classList.toggle('open', open);
     menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
@@ -114,11 +123,13 @@
   });
   onMediaChange(compact, function () { setMenu(false); });
 
-  // ---------------------------------------------------------------- Explore & learn's short list (computers)
+  // ---------------------------------------------------------------- Explore & learn's short list
   // Since version 2.00, Explore & learn opens a short list on computers: the activities and the pages of their own.
   // A click or tap on its button (or Enter or Space) opens and closes it; it also closes with a link in it, a click
   // or tap anywhere outside it, Escape (which brings the keyboard focus back to the button), or the keyboard focus
-  // moving out of it. On phones the list is part of the menu itself, and the button is hidden.
+  // moving out of it. On phones the list is part of the menu itself; since version 3.01 (Ali's idea, 2 November 2026)
+  // the same button folds and unfolds it there, and only the button does: the list is folded at first, but open on the
+  // pages of Explore & Learn (the item is-current), and it stays as the reader leaves it while the page is open.
   var subItem = $('.nav-explore');
   var subToggle = $('.nav-explore-toggle');
   function subOpen() { return !!(subItem && subItem.classList.contains('open')); }
@@ -127,15 +138,17 @@
     subItem.classList.toggle('open', open);
     subToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
+  function subAtFirst() { setSub(!!(subItem && subItem.classList.contains('is-current'))); }   // (phones)
+  if (compact.matches) subAtFirst();
   on(subToggle, 'click', function () { setSub(!subOpen()); });
   on(subItem, 'click', function (ev) {
-    if (ev.target.closest && ev.target.closest('.nav-sub a')) setSub(false);
+    if (!compact.matches && ev.target.closest && ev.target.closest('.nav-sub a')) setSub(false);
   });
   on(doc, 'pointerdown', function (ev) {
-    if (subOpen() && !subItem.contains(ev.target)) setSub(false);
+    if (!compact.matches && subOpen() && !subItem.contains(ev.target)) setSub(false);
   }, true);
   on(doc, 'keydown', function (ev) {
-    if ((ev.key === 'Escape' || ev.key === 'Esc') && subOpen()) {
+    if (!compact.matches && (ev.key === 'Escape' || ev.key === 'Esc') && subOpen()) {
       var inside = subItem.contains(doc.activeElement);
       setSub(false);
       if (inside) subToggle.focus();
@@ -143,9 +156,9 @@
   });
   on(subItem, 'focusout', function (ev) {
     var to = ev.relatedTarget;
-    if (subOpen() && to && !subItem.contains(to)) setSub(false);
+    if (!compact.matches && subOpen() && to && !subItem.contains(to)) setSub(false);
   });
-  onMediaChange(compact, function () { setSub(false); });
+  onMediaChange(compact, function () { if (compact.matches) subAtFirst(); else setSub(false); });
 
   // ---------------------------------------------------------------- the header slides away while reading down
   // and comes back on scrolling up. It stays near the top of the page, while the menu or Explore & learn's list is
@@ -176,7 +189,8 @@
       if (y > lastY) { down += y - lastY; up = 0; } else if (y < lastY) { up += lastY - y; down = 0; }
       lastY = y;
       mast.classList.toggle('is-stuck', y > 8);
-      var keep = y < 140 || menuOpen() || subOpen() || (keyboardUser && mast.contains(doc.activeElement));
+      // (on phones the list is inside the menu, and may stay unfolded while the menu is closed)
+      var keep = y < 140 || menuOpen() || (subOpen() && !compact.matches) || (keyboardUser && mast.contains(doc.activeElement));
       if (keep || up > 12) mast.classList.remove('is-hidden');
       else if (down > 24) mast.classList.add('is-hidden');
     }
@@ -861,6 +875,8 @@
     doc.body.appendChild(layer);
     setTimeout(function () { if (layer.parentNode) layer.parentNode.removeChild(layer); }, 760);
   }
+  // Inside a LINAC asks for the same burst (linac.js, since 3 November 2026): the journey in order, three stars.
+  on(doc, 'tz:burst', function (ev) { burst(ev.detail); });
 
   // A verdict ("Correct." / "Not quite.") shown before an explanation that is already on the page.
   function showFeedback(box, right) {
@@ -1449,13 +1465,18 @@
   // opens it in the line's place instead, moving what follows down so it never hides the next edition ("is-pinned"),
   // until another tap, a tap elsewhere or Escape. One card at a time. Screen readers hear it with the button
   // (aria-describedby); without scripts it is a line under the edition (the style sheet).
+  // (2 November 2026) Opening and closing keep timers of their own: a pointer passing quickly over another (i) used to
+  // cancel the open card's closing, and the card stayed open after the pointer had gone (the hover check found it). And
+  // Escape puts the keyboard on the (i) of the card it closes without opening it again (it used to, for a card the
+  // pointer had opened, so Escape didn't close it, as WCAG 1.4.13 asks).
   (function () {
     var lines = $all('.has-tip');
     if (!lines.length) return;
-    var current = null, timer = null;
+    var current = null, opening = null, openTimer = null, closeTimer = null, hush = false;
     function button(l) { return $('.ed-info', l); }
     function set(l, state) {        // state: '' (closed), 'is-open' (floating) or 'is-pinned' (in the line's place)
-      clearTimeout(timer);
+      if (state) { clearTimeout(openTimer); opening = null; }       // a card opens: no other is still to open
+      if (state || current === l) clearTimeout(closeTimer);
       if (state && current && current !== l) set(current, '');
       l.classList.remove('is-open', 'is-pinned');
       if (state) l.classList.add(state);
@@ -1468,19 +1489,26 @@
       on(b, 'click', function () { set(l, pinned(l) ? '' : 'is-pinned'); });
       on(b, 'pointerenter', function (ev) {
         if (ev.pointerType !== 'mouse' || current === l) return;
-        clearTimeout(timer);
-        timer = setTimeout(function () { set(l, 'is-open'); }, 350);
+        clearTimeout(openTimer);
+        opening = l;
+        openTimer = setTimeout(function () { opening = null; set(l, 'is-open'); }, 350);
+      });
+      on(l, 'pointerenter', function (ev) {        // back on its line (its (i) or its card) before it closed: it stays
+        if (ev.pointerType === 'mouse' && current === l) clearTimeout(closeTimer);
       });
       on(l, 'pointerleave', function (ev) {
         if (ev.pointerType !== 'mouse') return;
-        clearTimeout(timer);
-        if (current === l && !pinned(l)) timer = setTimeout(function () { if (!pinned(l)) set(l, ''); }, 200);
+        if (opening === l) { clearTimeout(openTimer); opening = null; }
+        if (current === l && !pinned(l)) {
+          clearTimeout(closeTimer);
+          closeTimer = setTimeout(function () { if (current === l && !pinned(l)) set(l, ''); }, 200);
+        }
       });
-      on(b, 'focus', function () { if (current !== l && b.matches(':focus-visible')) set(l, 'is-open'); });
+      on(b, 'focus', function () { if (!hush && current !== l && b.matches(':focus-visible')) set(l, 'is-open'); });
       on(b, 'blur', function () { if (current === l && !pinned(l)) set(l, ''); });
     });
     on(doc, 'keydown', function (ev) {
-      if (ev.key === 'Escape' && current) { var l = current; set(l, ''); button(l).focus(); }
+      if (ev.key === 'Escape' && current) { var l = current; set(l, ''); hush = true; button(l).focus(); hush = false; }
     });
     // A press elsewhere closes the open card; a press on another (i) leaves it to that (i)'s click, which opens its own
     // card and closes this one: closing it at the press would move that (i) away from under the pointer before the
@@ -1564,6 +1592,24 @@
       else try { window.scrollTo({ top: y, left: 0, behavior: 'smooth' }); } catch (e) { jumpTo(y); }
     });
   });
+
+  // ---------------------------------------------------------------- boxes side by side, one size
+  // (Ali, 4 November 2026) Where the boxes of a set stand side by side, every box takes the height of the tallest,
+  // also a box in a row of its own (the class is-even: rows of one size, site.css): on Standards in Medicine, Where to
+  // start learning; on Inside a LINAC, Who checks the machine and the three principles. One under another, on phones,
+  // each fits its text, as without the script.
+  (function () {
+    var grids = $all('.starts, .lx-checks, .lx-principles');
+    if (!grids.length || !window.getComputedStyle) return;
+    var timer = null;
+    function even() {
+      grids.forEach(function (g) {
+        g.classList.toggle('is-even', getComputedStyle(g).gridTemplateColumns.split(' ').length > 1);
+      });
+    }
+    even();
+    on(window, 'resize', function () { clearTimeout(timer); timer = setTimeout(even, 120); });
+  })();
 
   // ---------------------------------------------------------------- back to the top
   // "Back to top" and the name in the header go to the very top of the page. (The browser's own jump

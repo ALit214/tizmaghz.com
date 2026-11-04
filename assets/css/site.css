@@ -118,7 +118,22 @@ body {
 }
 img, svg { max-width: 100%; }
 a { color: inherit; text-underline-offset: 3px; }
-a:hover { text-decoration-color: var(--teal); }
+/* (Ali's choice, 4 November 2026) One rule for underlined links: the underline takes the colour of the nearest thing that
+   has one: its item's (a paper, an activity, a table's group, a box in a colour of its own: --link-tone), else its
+   section's on the home page (the colours of the
+   menu's circles), else the page's own (Home's black and white; Accessibility and the Site Map purple); under the
+   pointer it turns to the text's colour (black; white in the dark theme). Until then every link was black, turning teal.
+   (Ali, the same day) What the pointer shows, the keyboard shows too: every change below for :hover is also for
+   :focus-visible (a link reached with Tab), together with the keyboard's ring.
+   Navigation keeps its own way: the menu, the foot's three links, the Site Map's list and the topics are underlined only
+   under the pointer (the foot's in the page's colour). */
+a { text-decoration-color: var(--link-tone, var(--tone, var(--section-tone, var(--page-tone, var(--ink))))); }
+a:hover, a:focus-visible { text-decoration-color: var(--ink); }
+section#work { --section-tone: var(--teal); }
+section#expertise { --section-tone: var(--coral); }
+section#experience { --section-tone: var(--magenta); }
+section#explore { --section-tone: var(--gold); }
+section.contact { --section-tone: var(--violet); }
 button { font: inherit; color: inherit; }
 h1, h2, h3, h4 { text-wrap: balance; }
 /* Bodoni Moda's optical sizes are drawn for print: at each matching size its thinnest lines are only
@@ -168,6 +183,17 @@ main:focus, .hero-name:focus { outline: none; }
 .tone-magenta { --tone: var(--magenta); --tone-text: var(--magenta-text); --tone-soft: var(--magenta-soft); --tone-chip: var(--magenta-chip); --tone-chip-fg: var(--magenta-chip-fg); }
 .tone-gold    { --tone: var(--gold);    --tone-text: var(--gold-text);    --tone-soft: var(--gold-soft);    --tone-chip: var(--gold-chip);    --tone-chip-fg: var(--gold-chip-fg); }
 .tone-violet  { --tone: var(--violet);  --tone-text: var(--violet-text);  --tone-soft: var(--violet-soft);  --tone-chip: var(--violet-chip);  --tone-chip-fg: var(--violet-chip-fg); }
+/* The page's own colour (since version 3.01; Ali's ideas of 1 and 2 November 2026), on the pages of their own only
+   (build.py sets data-tone on the root): the line beside "About this page" and the keyboard's ring take the page's
+   colour, its door's (Books & Guidelines magenta, Inside Medical Devices orange, a device tutorial its group's: the
+   LINAC teal). The ring takes the colour's deeper shade in the light theme and its lighter one in the dark theme, so
+   it stands out at least 5 to 1 against everything around it (the rule asks for 3 to 1). Standards in Medicine keeps
+   the site's usual purple ring, which is its colour. The home page and the page-not-found page don't change, and the
+   pictures' own rings stay as they are: the stories' ring in five colours and the gold one on the dark slides. */
+:root[data-tone] { --page-tone: var(--violet); }
+:root[data-tone="teal"] { --page-tone: var(--teal); --focus: var(--teal-text); }
+:root[data-tone="coral"] { --page-tone: var(--coral); --focus: var(--coral-text); }
+:root[data-tone="magenta"] { --page-tone: var(--magenta); --focus: var(--magenta-text); }
 
 /* ------------------------------------------------------------ buttons */
 .btn {
@@ -217,7 +243,7 @@ main:focus, .hero-name:focus { outline: none; }
 .nav-explore { --dot: var(--gold); }
 .nav-sub-page > a { --dot: var(--tone); }
 .nav-contact > a { --dot: var(--violet); }
-.site-nav a:hover, .nav-explore-toggle:hover { text-decoration: underline; text-decoration-color: var(--dot, var(--teal)); }
+.site-nav a:hover, .nav-explore-toggle:hover, .site-nav a:focus-visible, .nav-explore-toggle:focus-visible { text-decoration: underline; text-decoration-color: var(--dot, var(--teal)); }
 /* Where you are (Ali's choice, 28 October 2026, for version 3.00): on the home page site.js marks the item of the
    section you are reading (is-here: Home at the top, Contact at the very end, Explore & learn's button in the
    activities), underlined in its own colour; on computers it follows the page as it scrolls, in the phone menu it
@@ -230,6 +256,8 @@ main:focus, .hero-name:focus { outline: none; }
 .nav-explore-toggle .icon { width: 16px; height: 16px; transition: transform 0.2s ease; }
 .nav-explore-toggle[aria-expanded="true"] .icon { transform: rotate(180deg); }
 .nav-explore.is-current > a, .nav-explore.is-current > button { text-decoration: underline; text-decoration-color: var(--gold); }
+/* (3.01, Ali's idea) On Accessibility, which sits under Home, Home is underlined in its colour, the text colour. */
+.nav-home.is-current > a { text-decoration: underline; text-decoration-color: var(--dot); }
 .nav-explore-label { display: none; }   /* the list's name on phones (below) */
 @media (min-width: 760px) {
   /* The list under Explore & learn's button: each item with an open circle in its colour (the activities gold, as the
@@ -246,17 +274,18 @@ main:focus, .hero-name:focus { outline: none; }
   .js .nav-sub a { display: flex; gap: 12px; width: 100%; padding: 0 14px; border-radius: 12px; }
   .js .nav-sub a::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--tone); }
   .js .nav-sub-activities a::before { border: 2px solid var(--gold); }   /* (its item has no --tone of its own) */
-  .js .nav-sub a:hover { background: var(--tone-soft); text-decoration: none; }
+  .js .nav-sub a:hover, .js .nav-sub a:focus-visible { background: var(--tone-soft); text-decoration: none; }
   .js .nav-sub-activities a:hover { background: var(--gold-soft); }
-  .js .nav-sub a[aria-current="page"], .js .nav-sub li.is-here > a,
-  .js .nav-sub a[aria-current="page"]:hover, .js .nav-sub li.is-here > a:hover { text-decoration: underline; text-decoration-color: var(--dot); }
+  .js .nav-sub a[aria-current="page"], .js .nav-sub li.is-here > a, .js .nav-sub li.is-within > a,
+  .js .nav-sub a[aria-current="page"]:hover, .js .nav-sub li.is-here > a:hover, .js .nav-sub li.is-within > a:hover {
+    text-decoration: underline; text-decoration-color: var(--dot); }
 }
 @media (min-width: 760px) {
   /* Without the script the button can't open the list: on computers Explore & learn is then a link, and the pages
      follow it in the menu as links of their own (the page you are on underlined in its colour). */
   .no-js .nav-explore, .no-js .nav-sub { display: contents; }
   .no-js .nav-sub-activities { display: none; }
-  .no-js .nav-sub a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--tone); }
+  .no-js .nav-sub a[aria-current="page"], .no-js .nav-sub li.is-within > a { text-decoration: underline; text-decoration-color: var(--tone); }
   .no-js .nav-explore.is-current > a { text-decoration: none; }
 }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
@@ -347,8 +376,24 @@ main:focus, .hero-name:focus { outline: none; }
   /* Where you are is underlined in the colour of its item's circle (Ali's choice, 28 October 2026, for version 3.00;
      until then only the page of its own you were on): the section you are reading when the menu opens (above), on a
      page of its own the page, and Explore & learn's name, in gold, while you are in its part of the site. */
-  .nav-sub a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--tone); }
+  .nav-sub a[aria-current="page"], .nav-sub li.is-within > a { text-decoration: underline; text-decoration-color: var(--tone); }
   .nav-explore.is-here > .nav-explore-label, .nav-explore.is-current > .nav-explore-label {
+    text-decoration: underline; text-decoration-color: var(--gold); text-decoration-thickness: 2px; text-underline-offset: 6px;
+  }
+  /* Since version 3.01 (Ali's idea, 2 November 2026), with the script, Explore & learn's name is a button that folds
+     and unfolds its list, with a small arrow at the end of its row (screen readers hear whether it is open): folded at
+     first, but open on the pages of Explore & Learn (assets/js/site.js). Folded, it ends with a rule like the other
+     items. Without the script the list shows under the name, as before. */
+  .js .nav-explore-label { display: none; }
+  .js .nav-explore-toggle {
+    display: flex; align-items: center; gap: 14px; min-height: 56px; width: 100%; text-align: start;
+    font-family: var(--font-display); font-size: 26px; font-weight: var(--w-menu); white-space: normal;
+  }
+  .js .nav-explore-toggle::before { content: ''; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--gold); }
+  .js .nav-explore-toggle .icon { flex: none; width: 24px; height: 24px; margin-inline-start: auto; }
+  .js .nav-explore:not(.open) > .nav-explore-toggle { border-bottom: 1.5px solid var(--rule); }
+  .js .nav-explore:not(.open) > .nav-sub { display: none; }
+  .js .nav-explore.is-here > .nav-explore-toggle, .js .nav-explore.is-current > .nav-explore-toggle {
     text-decoration: underline; text-decoration-color: var(--gold); text-decoration-thickness: 2px; text-underline-offset: 6px;
   }
   .controls { justify-content: space-between; }
@@ -507,9 +552,14 @@ main:focus, .hero-name:focus { outline: none; }
 .read-link {
   display: inline-flex; align-items: center; min-height: 44px;
   font-family: var(--font-ui); font-weight: 700;
-  text-decoration: underline; text-decoration-color: var(--teal); text-decoration-thickness: 3px; text-underline-offset: 6px;
+  text-decoration: underline; text-decoration-color: var(--link-tone, var(--tone, var(--section-tone, var(--page-tone, var(--ink))))); text-decoration-thickness: 3px; text-underline-offset: 6px;
 }
-.read-link:hover { text-decoration-color: var(--ink); }
+/* (4 November 2026) in the colour of its place, as every link (see a, above): the papers' teal, Accessibility's purple */
+.read-link:hover, .read-link:focus-visible { text-decoration-color: var(--ink); }
+/* On Books & Guidelines and Standards in Medicine, "Where to get it" is underlined in its item's colour, its field's or
+   family's (Ali, 1 November 2026; until then teal everywhere). */
+.book .read-link, .standard .read-link { text-decoration-color: var(--tone); }
+.book .read-link:hover, .standard .read-link:hover, .book .read-link:focus-visible, .standard .read-link:focus-visible { text-decoration-color: var(--ink); }
 .note { margin: 0 0 40px; max-width: 60em; font-size: 15px; color: var(--muted); }
 .entry .btn { margin-top: 20px; }
 .categories {
@@ -840,7 +890,7 @@ main:focus, .hero-name:focus { outline: none; }
   background: var(--tone-chip); color: var(--tone-chip-fg); text-decoration: none;
   font-family: var(--font-ui); font-size: 16px; font-weight: 700; line-height: 1.35;
 }
-.topic:hover { text-decoration: underline; text-decoration-thickness: 2px; }
+.topic:hover, .topic:focus-visible { text-decoration: underline; text-decoration-thickness: 2px; }
 .email-block { margin-top: clamp(40px, 5vw, 64px); padding-top: 26px; border-top: 6px solid var(--violet); }
 .email-label { margin: 0; font-family: var(--font-ui); font-weight: 700; color: var(--muted); }
 .email-address {
@@ -858,16 +908,106 @@ main:focus, .hero-name:focus { outline: none; }
   font-family: var(--font-latin); font-size: 15px; font-weight: 600; overflow-wrap: anywhere;
 }
 .orcid-icon { flex: none; width: 24px; height: 24px; }
+/* (4 November 2026) underlined in Contact's purple (see a, above), a little thicker, as a link on a line of its own */
+.orcid a { text-decoration-thickness: 2px; text-underline-offset: 4px; }
 
 /* ------------------------------------------------------------ footer */
+/* (3.01, Ali's idea and choices of 3 November 2026) Phones and tablets: the five phrases one under the other, centred,
+   each with a short dash of the bar's colours in order from the top (teal, coral, magenta, gold, violet): the copyright,
+   Accessibility, the Site Map, Back to top, and last, as the page's closing sentence, the line on cookies; then the
+   version. Each phrase is as tall as a link (44 pixels), so every dash sits as far from its phrase. Computers (below):
+   each phrase in the middle of one of the five colours of the bar above it. */
 .footer-inner {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 28px;
-  padding-block: 22px 28px; font-size: 14px; color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding-block: 12px 28px; font-size: 14px; color: var(--muted);
 }
 .footer-inner p { margin: 0; }
-/* The version number: its own small line, centred at the very bottom of the page. */
-.footer-inner .version { flex: 1 0 100%; margin-top: 8px; text-align: center; font-size: 12px; line-height: 1.5; }
+.foot-copy, .foot-privacy { padding-block: 12px; line-height: 20px; }      /* (as tall as a link: 44 pixels) */
+.footer-access { display: flex; justify-content: center; }
+.footer-inner .foot-copy, .footer-inner .foot-privacy, .footer-inner .footer-access, .footer-inner .to-top { position: relative; margin-top: 18px; }
+/* Each dash at the top of its phrase's 44 pixels, 8 pixels above the words, and 30 below the phrase before it. */
+.foot-copy::before, .foot-privacy::before, .footer-access::before, .to-top::before {
+  content: ''; position: absolute; top: 0; left: 50%; width: 28px; height: 4px; margin-left: -14px; border-radius: 2px;
+  background: var(--dash);
+}
+.foot-copy { --dash: var(--teal); }
+.foot-access { --dash: var(--coral); }
+.foot-map { --dash: var(--magenta); }
+.to-top { --dash: var(--gold); }
+.foot-privacy { --dash: var(--violet); }
+/* The version number: its own small line at the very bottom of the page. */
+.footer-inner .version { margin-top: 10px; font-size: 12px; line-height: 1.5; }
 .to-top { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-family: var(--font-ui); font-weight: 600; color: var(--ink); }
+/* (3.01) The links to Accessibility and the Site Map; on each page itself, underlined as the page you are on. */
+.footer-access a { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-ui); font-weight: 600; color: var(--ink);
+  text-decoration: none; }
+/* (Ali, 4 November 2026) The foot's three links, Accessibility, the Site Map and Back to top, alike: underlined only under
+   the pointer or when the keyboard reaches them (and as the page you are on), in the page's own colour (Home's black and white on the home page). Until
+   then Back to top was always underlined, black turning teal, and the other two turned purple on every page. */
+.to-top { text-decoration: none; }
+.to-top:hover, .footer-access a:hover, .to-top:focus-visible, .footer-access a:focus-visible, .footer-access a[aria-current="page"] {
+  text-decoration: underline; text-decoration-color: var(--page-tone, var(--ink)); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+/* Computers: five columns as wide as the bar's five colours (the whole width of the window, as the bar), each phrase in
+   the middle of its own, in Ali's order: the copyright, Accessibility, the line on cookies (in the middle, under
+   magenta), the Site Map, Back to top; no dashes; the version under them, in the middle. On the Persian and Arabic pages
+   the columns run from the right, as the bar's colours do. */
+@media (min-width: 900px) {
+  .footer-inner {
+    max-width: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; gap: 6px 0;
+    padding-block: 22px 28px; padding-inline: 0;
+  }
+  .footer-inner .foot-copy, .footer-inner .foot-privacy, .footer-inner .footer-access, .footer-inner .to-top {
+    margin: 0; padding-inline: 8px; justify-self: center;       /* (8: the line on cookies fits on one line at 1280) */
+  }
+  .foot-copy, .foot-privacy { padding-block: 0; line-height: inherit; }
+  .footer-inner .to-top { padding-inline: 0; }
+  .foot-copy::before, .foot-privacy::before, .footer-access::before, .to-top::before { content: none; }
+  .foot-copy { grid-area: 1 / 1; }
+  .foot-access { grid-area: 1 / 2; }
+  .foot-privacy { grid-area: 1 / 3; }
+  .foot-map { grid-area: 1 / 4; }
+  .to-top { grid-area: 1 / 5; }
+  .footer-inner .version { grid-area: 2 / 1 / 3 / -1; margin-top: 8px; }
+}
+
+/* ------------------------------------------------------------ Site Map (since version 3.01) */
+/* Every page in one list, in three parts, each a band like Accessibility's parts. Each item is a link with a small
+   circle in its colour before it, as in the menu: filled for the items of each part, open for the items under them
+   (Home's filled circle in the text colour is its alone, by Ali's rule for the menu); the items under an item, or under
+   a group's name, are indented along a thin line. The page you are on is underlined in its colour, as in the menu. */
+.map-page .band { padding-block: clamp(36px, 4vw, 56px); }
+.map-page .section-head { display: block; margin: 0 0 14px; }
+.map-page .section-head h2 { font-size: clamp(30px, 1.6vw + 22px, 42px); line-height: 1.15; }
+.map-list, .map-sub { list-style: none; margin: 0; padding: 0; }
+.map-list { max-width: 46em; }
+.map-sub { margin-inline-start: 5px; padding-inline-start: 20px; border-inline-start: 2px solid var(--rule); }
+.map-ink { --tone: var(--ink); }
+.map-item > a {
+  display: inline-flex; align-items: center; gap: 12px; min-height: 44px; font-family: var(--font-ui); font-size: 16px;
+  font-weight: 600; color: var(--ink); text-decoration: none; text-decoration-thickness: 2px; text-underline-offset: 6px;
+}
+.map-item > a::before { content: ''; flex: none; width: 12px; height: 12px; box-sizing: border-box; border-radius: 50%;
+  border: 2px solid var(--tone); background: var(--tone); }
+.map-sub .map-item > a::before { width: 10px; height: 10px; background: transparent; }
+.map-item > a:hover, .map-item > a:focus-visible, .map-item > a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--tone); }
+.map-name { display: flex; align-items: center; min-height: 36px; font-family: var(--font-ui); font-size: 14px; font-weight: 600; color: var(--muted); }
+
+/* ------------------------------------------------------------ Accessibility (since version 3.01) */
+/* A short page: its heading and introduction, then a band for each part, its text at reading width and its list with
+   small circles in the site's colours, in turn; the email link as "Where to get it" is, with the address beside it. */
+.a11y-page .band { padding-block: clamp(36px, 4vw, 56px); }
+.a11y-page .section-head { display: block; margin: 0 0 18px; }
+.a11y-page .section-head h2 { font-size: clamp(30px, 1.6vw + 22px, 42px); line-height: 1.15; }
+.a11y-body { max-width: 46em; }
+.a11y-body p { margin: 0 0 14px; }
+.a11y-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.a11y-list li { position: relative; padding-inline-start: 26px; }
+.a11y-list li::before { content: ''; position: absolute; inset-inline-start: 2px; top: 0.55em; width: 10px; height: 10px; border-radius: 50%; background: var(--teal); }
+.a11y-list li:nth-child(5n+2)::before { background: var(--coral); }
+.a11y-list li:nth-child(5n+3)::before { background: var(--magenta); }
+.a11y-list li:nth-child(5n+4)::before { background: var(--gold); }
+.a11y-list li:nth-child(5n+5)::before { background: var(--violet); }
+.a11y-email { margin: 0; }
 
 /* ------------------------------------------------------------ page not found */
 /* The name and the language and theme buttons on top; then the specimen dish with its short animation,
@@ -951,6 +1091,11 @@ main:focus, .hero-name:focus { outline: none; }
   letter-spacing: 0.02em; color: var(--muted);
 }
 .doors { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+/* (Ali's choice, 4 November 2026) Every door the same size, at every width: the rows all take the height of the
+   tallest door (1fr rows), and each link fills its door. No door's text is long enough to need "Show more". */
+.doors { grid-auto-rows: 1fr; }
+.door { display: flex; }
+.door a { flex: 1 1 auto; }
 .door a {
   display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 24px;
   min-height: 120px; padding: 26px clamp(20px, 3vw, 36px); border-radius: 24px;
@@ -963,6 +1108,10 @@ main:focus, .hero-name:focus { outline: none; }
 }
 .door-text { grid-column: 1; max-width: 40em; color: var(--muted); }
 .door-arrow { grid-column: 2; grid-row: 1 / span 2; width: 34px; height: 34px; color: var(--tone-text); }
+/* Inside Medical Devices (since version 3.01): under each group's name, a door to each of its tutorials, in the
+   group's colour, two side by side where there is room (so one door alone keeps the width it would have beside
+   another). */
+.tutorial-doors { margin-top: 32px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
 
 /* ------------------------------------------------------------ pages of their own (since version 2.00) */
 .page-head { padding-block: clamp(40px, 6vw, 88px) clamp(40px, 5vw, 72px); }
@@ -979,6 +1128,11 @@ main:focus, .hero-name:focus { outline: none; }
 .crumbs li + li::before { content: '/'; margin-inline-end: 10px; color: var(--rule); }
 .crumbs a { display: inline-flex; align-items: center; min-height: 44px; }
 .crumbs [aria-current] { color: var(--ink); }
+/* (Ali, 4 November 2026) Each link here underlined in the colour of the page it leads to, as in the menu: Home in its own
+   (the text colour: black, white in the dark theme), Explore & Learn gold, Inside Medical Devices orange (build.py puts
+   the classes); under the pointer its words and underline turn to the text colour. */
+.crumbs .crumb-home { --tone: var(--ink); }
+.crumbs a:hover, .crumbs a:focus-visible { color: var(--ink); text-decoration-color: var(--ink); }
 .page-title {
   margin: 12px 0 0; font-family: var(--font-display); font-weight: var(--w-h2);
   font-size: var(--size-h2); line-height: var(--lh-h2); letter-spacing: var(--track-head);
@@ -986,7 +1140,7 @@ main:focus, .hero-name:focus { outline: none; }
 }
 .page-title:focus { outline: none; }
 .page-lead { display: block; margin-top: 24px; }
-.page-about { margin: 28px 0 0; max-width: 46em; padding: 14px 18px; border-inline-start: 4px solid var(--violet);
+.page-about { margin: 28px 0 0; max-width: 46em; padding: 14px 18px; border-inline-start: 4px solid var(--page-tone, var(--violet));
   background: var(--tint); border-radius: 0 12px 12px 0; font-size: 15px; color: var(--muted); }
 [dir="rtl"] .page-about { border-radius: 12px 0 0 12px; }
 .page-about strong { color: var(--ink); }
@@ -1019,9 +1173,12 @@ main:focus, .hero-name:focus { outline: none; }
 .where tbody th cite { font-style: normal; }
 .where a { font-weight: 700; }
 .where .where-get a { display: inline-flex; justify-content: center; min-height: 24px; text-align: center; }
-/* An authorized Persian or Arabic edition: a smaller link under its publisher, in the violet of "also in Persian". */
+/* Where to get each item, in its field's colour (Ali, 1 November 2026: until then the publisher was in the text colour
+   and the editions in violet): the publisher's page, and under it, smaller, any authorized Persian or Arabic edition. */
+.where .where-get a { color: var(--tone-text); text-decoration-color: var(--tone); }
+.where .where-get a:hover, .where .where-get a:focus-visible { text-decoration-color: var(--ink); }     /* (4 November 2026) as every link */
 .where .where-ed { display: block; margin-top: 4px; }
-.where .where-ed a { font-size: 14px; font-weight: 600; color: var(--violet-text); text-decoration-color: var(--violet); }
+.where .where-ed a { font-size: 14px; font-weight: 600; }
 .where .where-access { white-space: nowrap; }
 .where .badge { min-height: 26px; padding: 0 10px; white-space: nowrap; }
 .where tr:target { background: var(--tint); }
@@ -1033,6 +1190,10 @@ main:focus, .hero-name:focus { outline: none; }
 .page-end { padding-block: 32px 56px; border-top: 1px solid var(--rule); font-size: 15px; color: var(--muted); }
 .page-end p { margin: 6px 0 0; }
 .page-end a { font-weight: 700; color: var(--ink); }
+/* (Ali's choice, 4 November 2026) the end's "Email me" is underlined in the page's own colour (Books & Guidelines
+   magenta, Standards in Medicine violet, Inside Medical Devices orange, Inside a LINAC teal) and turns black under the
+   pointer, as Accessibility's "Email me" and "Where to get it" do; thinner, in the small line at the end. */
+.page-end a { text-decoration-thickness: 2px; text-underline-offset: 4px; }     /* its colour: the page's (see a, above) */
 .page-draft { color: var(--coral-text); font-weight: 700; }
 @media (max-width: 599.98px) {
   /* Phones: each item is two lines, its title across the width, then where to get it at the start and access at the
@@ -1115,9 +1276,10 @@ main:focus, .hero-name:focus { outline: none; }
   .where-standards .src-row:not(.src-last) > td { padding-bottom: 2px; border-bottom: 0; }
   .where-standards .src-row:not(.src-first) > td { padding-top: 2px; }
 }
-/* The three editions alike (English, Persian, Arabic: Ali, 29 October 2026): smaller links in the violet of "also in
-   Persian", as the editions on Books & Guidelines. */
-.where-standards .src a { font-size: 14px; font-weight: 600; color: var(--violet-text); text-decoration-color: var(--violet); }
+/* The three editions alike (English, Persian, Arabic: Ali, 29 October 2026): smaller links, in their family's colour (Ali,
+   1 November 2026; until then in violet), as the editions on Books & Guidelines. */
+.where-standards .src a { font-size: 14px; font-weight: 600; color: var(--tone-text); text-decoration-color: var(--tone); }
+.where-standards .src a:hover, .where-standards .src a:focus-visible { text-decoration-color: var(--ink); }     /* (4 November 2026) as every link */
 /* When the card under an edition is open in the line's place (after a tap or a click), and without scripts, where
    it is always a line under the edition, the row's cells keep to the top, so the label stays beside its line. */
 .where-standards .src-row:has(.is-pinned) > td, .no-js .where-standards .src-row > td { vertical-align: top; }
@@ -1130,6 +1292,8 @@ main:focus, .hero-name:focus { outline: none; }
 /* Each standard's name leads back to its card (Ali, 29 October 2026): the name as it was, in the weight of the
    table's names, with a plain link's underline, and at least 24 pixels tall for a fingertip. */
 .where-standards tbody th .to-card { display: inline-flex; align-items: center; min-height: 24px; font-weight: inherit; }
+/* Books & Guidelines, the same (Ali, 1 November 2026): each item's title leads back to its card. */
+.where tbody th .to-card { font-weight: inherit; }
 /* The small (i) of an edition, like a footnote's mark (Ali's choice, 29 October 2026): small and raised, just after
    the edition's name and outside it, so the names of all the sources are centred alike. The mark is small, but its
    button is as tall as the line and wide enough for a fingertip (26 by 30 pixels), beside the name, not over it.
@@ -1177,8 +1341,354 @@ main:focus, .hero-name:focus { outline: none; }
   display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-ui); font-size: 18px; font-weight: 700;
   text-decoration: underline; text-decoration-color: var(--tone); text-decoration-thickness: 3px; text-underline-offset: 6px;
 }
-.start-name:hover { text-decoration-color: var(--ink); }
+.start-name:hover, .start-name:focus-visible { text-decoration-color: var(--ink); }
 .start p { margin: 6px 0 0; color: var(--muted); }
+
+/* ------------------------------------------------------------ Inside a LINAC (since version 3.01) */
+/* The first tutorial (learn/devices/linac/), in its page's colour, its group's in Inside Medical Devices: teal (since 2
+   November 2026; orange, coral, until then). The warning never to enter a treatment room stays orange. The box "Before you
+   start", then ten numbered parts, each a band as on the other pages of their own, ending with its sources after the
+   outlined label "General principle" ("Varies by model or site" marks what each machine and center does its own way).
+   The drawings are dark slides, like the activities' pictures, the same in both themes; what sits over them (the
+   room's buttons and their names, the steps' numbers, the leaves) keeps the slides' own colours, and their keyboard
+   ring is the dish's gold. Five parts do something with assets/js/linac.js; every state the script starts in is set
+   here from the first moment (.js), so nothing moves when it arrives, and without it each part shows all it says. */
+.lx-part { scroll-margin-top: 60px; }
+/* A part's number, above its heading (the text refers to the parts by number: "part 3 follows them"). */
+.lx-num {
+  display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; margin-bottom: 16px;
+  border: 2px solid var(--tone); border-radius: 50%; color: var(--tone-text);
+  font-family: var(--font-ui); font-size: 17px; font-weight: 700; line-height: 1; letter-spacing: 0;
+}
+/* The two labels, outlined as on Books & Guidelines: "General principle" in the page's colour, "Varies by model or
+   site" in violet, as the label for an edition in the page's language. */
+.lx-label { min-height: 26px; padding: 0 10px; white-space: nowrap; vertical-align: 1px; line-height: 1.4; }
+.lx-general { border-color: var(--tone-text); }
+.lx-varies { border-color: var(--violet); color: var(--violet-text); }
+.lx-source { margin-top: 32px; max-width: 72em; line-height: 1.8; }
+.lx-source .lx-label { margin-inline-end: 6px; }
+.lx-text { margin-top: 32px; max-width: 46em; }
+.lx-text p { margin: 0; }
+.lx-text p + p { margin-top: 16px; }
+.lx-pic { position: relative; }
+/* Activities 2 to 5 in one frame (Ali's idea and choice, 3 November 2026): on computers the same split (6:5) and on
+   every screen the same 4:3 frame, with the night of the drawings for its background, each drawing centred in it;
+   and every part's introduction under its heading. */
+.lx-head { display: block; }
+.lx-head p { margin-top: 12px; }
+.lx-room-pic, .lx-journey-pic, .lx-angles-pic, .lx-frame {
+  aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; border-radius: 20px;
+  background: radial-gradient(ellipse 80% 70% at 50% 35%, #170D31, #0C0618);
+}
+.lx-room-pic .lx-pic { width: 100%; }
+.lx-journey-pic .lx-pic { height: 100%; width: auto; aspect-ratio: 480 / 420; }
+.lx-angles-pic .lx-pic { height: 100%; width: auto; aspect-ratio: 520 / 430; }
+.lx-frame > .lx-field, .lx-frame > svg { width: 100%; }
+.lx-art { display: block; width: 100%; height: auto; }
+/* What sits on a dark slide takes the dish's gold keyboard ring (as the logo's pause button does). */
+.lx-spot:focus-visible, .lx-leaf:focus-visible { outline-color: #E6C36A; }
+
+/* 0. Before you start: a card like an activity's, with the page's colour along its top. */
+.lx-box { position: relative; overflow: hidden; padding: clamp(24px, 3.4vw, 44px); border-radius: 28px; background: var(--bg); }
+.lx-box::before { content: ''; position: absolute; inset: 0 0 auto; height: 8px; background: var(--tone); }
+.lx-box-title {
+  margin: 0; font-family: var(--font-h3); font-weight: var(--w-h3);
+  font-size: clamp(28px, 1.6vw + 18px, 38px); line-height: 1.15; letter-spacing: var(--track-head);
+}
+.lx-box-grid { display: grid; gap: 20px 48px; margin-top: 20px; align-items: start; }
+@media (min-width: 900px) { .lx-box-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); } }
+.lx-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: var(--size-lead); line-height: 1.5; }
+.lx-lines li { position: relative; padding-inline-start: 26px; }
+.lx-lines li::before { content: ''; position: absolute; inset-inline-start: 2px; top: 0.5em; width: 10px; height: 10px; border-radius: 50%; background: var(--tone); }
+.lx-not { padding: 16px 20px 18px; border-radius: 18px; background: var(--paper); }
+.lx-not h3 { margin: 0; font-family: var(--font-ui); font-size: 16px; font-weight: 700; line-height: 1.4; }
+.lx-not ul { margin: 8px 0 0; padding-inline-start: 20px; }
+.lx-not li + li { margin-top: 4px; }
+.lx-never { display: flex; align-items: flex-start; gap: 10px; margin: 24px 0 0; font-weight: 700; color: var(--coral-text); }
+.lx-never .icon { width: 22px; height: 22px; margin-top: 0.15em; }
+.lx-labels { margin: 14px 0 0; max-width: 60em; color: var(--muted); line-height: 2; }
+
+/* 2. Meet the machine: the room, with a button on each part; beside it (under it on phones) the part chosen, one at a
+   time. "Show as a list" shows them all, as cards (and so does the page without its script, under the drawing). */
+.lx-room { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px 44px; margin-top: 28px; align-items: start; }
+@media (min-width: 900px) { .js .lx-room[data-view="drawing"] { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); } }
+.lx-room-switch { grid-column: 1 / -1; margin: 0; }
+.lx-room-pic { container: lx-room / inline-size; }
+.no-js .lx-room-pic { max-width: 860px; }
+.js .lx-room[data-view="list"] .lx-room-pic { display: none; }
+.lx-room-parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.no-js .lx-room-parts, .lx-room[data-view="list"] .lx-room-parts { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.js .lx-room[data-view="drawing"] .lx-room-part:not(.is-current) { display: none; }
+.lx-room-part { padding: 18px 20px; border-radius: 20px; background: var(--bg); border-top: 6px solid var(--tone); }
+.lx-room-part h3, .lx-step h3, .lx-stage h3 { margin: 0; font-family: var(--font-ui); font-size: 19px; font-weight: 700; line-height: 1.35; }
+.lx-room-part p { margin: 6px 0 0; }
+.lx-spots { position: absolute; inset: 0; }
+/* Each part's button: a small orange cell on the slide, white when its part is shown. Its name is for screen readers;
+   where the drawing is wide enough, it also shows beside the button of the part shown, and of the button under the
+   pointer or the keyboard, on the side that covers no other button (build.py, from art.ROOM_SPOTS: the room isn't
+   mirrored, so the sides are the same in every language). */
+.lx-spot {
+  position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; padding: 0; border: 2px solid #FFFFFF; border-radius: 50%;
+  background: #FF7A64; color: #16112A; cursor: pointer; box-shadow: 0 0 0 5px rgba(255, 122, 100, 0.3);
+}
+.lx-spot:hover { box-shadow: 0 0 0 7px rgba(255, 122, 100, 0.45); }
+.lx-spot[aria-pressed="true"] { background: #FFFFFF; border-color: #FF7A64; box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.35); }
+.lx-spot-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@container lx-room (min-width: 600px) {
+  .lx-spot:hover, .lx-spot:focus-visible { z-index: 2; }
+  .lx-spot[aria-pressed="true"] .lx-spot-name, .lx-spot:hover .lx-spot-name, .lx-spot:focus-visible .lx-spot-name {
+    width: max-content; max-width: 200px; height: auto; overflow: visible; clip-path: none; white-space: normal;
+    padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(230, 195, 106, 0.6); background: #140B26; color: #EFE8F8;
+    font-family: var(--font-ui); font-size: 13px; font-weight: 700; line-height: 1.35; text-align: start;
+  }
+  .lx-spot[aria-pressed="true"] .lx-spot-name { background: #EFE8F8; color: #140B26; border-color: #FFFFFF; }
+  .lx-spot-end .lx-spot-name { left: calc(100% + 8px); top: 50%; translate: 0 -50%; }
+  .lx-spot-start .lx-spot-name { right: calc(100% + 8px); top: 50%; translate: 0 -50%; }
+  .lx-spot-above .lx-spot-name { bottom: calc(100% + 8px); left: 50%; translate: -50% 0; }
+  .lx-spot-below .lx-spot-name { top: calc(100% + 8px); left: 50%; translate: -50% 0; }
+}
+
+/* 3. From an electron to a beam: the treatment head beside its steps (under it on phones), one step at a time with the
+   script, which lights the step's part and draws the beam's path so far; the drawing reads the way the page does, so
+   it is mirrored on the Persian and Arabic pages, with its numbers (in the page) placed from the page's start edge. */
+.lx-journey { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px 44px; margin-top: 32px; align-items: start; }
+@media (min-width: 900px) {
+  .lx-journey { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); }
+  .lx-journey-pic { position: sticky; top: 112px; }
+}
+[dir="rtl"] .lx-head-art { transform: scaleX(-1); }
+.lx-marks { position: absolute; inset: 0; pointer-events: none; }
+.lx-mark {
+  position: absolute; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; margin-block-start: -13px;
+  margin-inline-start: -13px; border-radius: 50%; border: 1.5px solid rgba(233, 217, 255, 0.7); background: #140B26; color: #EFE8F8;
+  font-family: var(--font-ui); font-size: 13px; font-weight: 700; line-height: 1;
+}
+.js .lx-mark.is-current { background: #FF7A64; border-color: #FFFFFF; color: #16112A; }
+.lx-part-art, .lx-beam-art { transition: opacity 0.35s ease; }
+.js .lx-head-art .lx-part-art:not(.is-lit) { opacity: 0.4; }
+.js .lx-head-art .lx-beam-art:not(.is-on) { opacity: 0; }
+.lx-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.js .lx-step:not(.is-current) { display: none; }
+.lx-step { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; border-radius: 18px; background: var(--paper); }
+.lx-step p { margin: 6px 0 0; }
+.lx-step-num, .lx-stage::before {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--tone-chip); color: var(--tone-chip-fg); font-family: var(--font-ui); font-size: 15px; font-weight: 700; line-height: 1;
+}
+.lx-journey .stepper { margin-top: 14px; }
+/* Go deeper: closed panels, one under another (side by side on wide screens). */
+.lx-deeper { margin-top: clamp(36px, 4vw, 52px); padding-top: clamp(24px, 3vw, 32px); border-top: 1.5px solid var(--rule); }
+.lx-deeper h3, .lx-door-box h3, .lx-points-box h3, .lx-sub > h3, .lx-words h3, .lx-role h3 {
+  margin: 0; font-family: var(--font-h3); font-weight: var(--w-h3); font-size: clamp(21px, 0.8vw + 16px, 25px); line-height: var(--lh-h3);
+}
+.lx-deeper > p { margin: 8px 0 0; color: var(--muted); }
+.lx-deeps { display: grid; gap: 10px 14px; margin-top: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); align-items: start; }
+.lx-deep { border-radius: 16px; background: var(--paper); }
+.lx-deep summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 10px 16px 10px 18px;
+  border-radius: 16px; cursor: pointer; list-style: none; font-family: var(--font-ui); font-size: 16px; font-weight: 700; line-height: 1.35;
+}
+.lx-deep summary::-webkit-details-marker { display: none; }
+.lx-deep summary:hover { background: var(--tint); }
+.lx-deep summary .icon { transition: transform 0.2s ease; }
+.lx-deep[open] summary .icon { transform: rotate(180deg); }
+.lx-deep p { margin: 0; padding: 2px 18px 16px; }
+
+/* 4. Shape the beam: the field as the treatment head sees it (the light where the beam passes, with a dark margin on
+   each side where the leaves rest when fully out), and ten pairs of leaves over it, each a slider. The field keeps
+   each row at least 26 pixels tall, for a fingertip. Without the script: a still drawing of a good fit. */
+.lx-shape { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px 44px; margin-top: 32px; align-items: start; }
+@media (min-width: 900px) { .lx-shape { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); } }
+/* The game's two lines above both columns (Ali's wish, 3 November 2026), so the buttons start level with the frame,
+   as in the other activities. */
+.lx-shape-top { grid-column: 1 / -1; }
+.lx-shape-top .lx-which { margin-bottom: 0; }
+.lx-how { margin: 0 0 12px; font-family: var(--font-ui); font-size: 15px; font-weight: 700; }
+.lx-shape-pic { container-type: inline-size; min-width: 0; }
+/* The field is two thirds as tall as it is wide (the drawing's shape), but at least 260 pixels: a phone's is a little taller. */
+.lx-field { position: relative; height: max(260px, 66.667cqi); border-radius: 16px; overflow: hidden; background: #231A3F; }
+.lx-field .lx-field-art { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.lx-leaf {
+  position: absolute; display: block; box-sizing: border-box; cursor: grab; touch-action: pan-y;
+  background: linear-gradient(#625A7E, #3D3555); border: 1px solid rgba(201, 191, 230, 0.75); opacity: 0.93;
+  transition: left 0.15s ease, width 0.15s ease;
+}
+.lx-leaf-left { border-radius: 0 7px 7px 0; }
+.lx-leaf-right { border-radius: 7px 0 0 7px; }
+.lx-leaf:hover { background: linear-gradient(#746B93, #4A4166); }
+.lx-leaf.is-chosen { background: linear-gradient(#FF9C8A, #E2553F); border-color: #FFFFFF; opacity: 0.95; }
+.lx-leaf:focus-visible { outline: 3px solid #E6C36A; outline-offset: -3px; z-index: 1; }
+.lx-leaf.is-dragged { cursor: grabbing; transition: none; }
+.lx-still { margin: 0; }
+.lx-still svg { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; border-radius: 16px; }
+.lx-still figcaption { margin-top: 10px; }
+.lx-shape-buttons, .lx-angles-buttons, .lx-path-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.lx-status p { margin: 0; }
+.lx-status p + p { margin-top: 4px; }
+.lx-status .lx-done { margin-top: 8px; font-weight: 700; }
+.lx-shape-side .lx-status { margin-top: 16px; }
+/* Since 2 November 2026 (Ali's choices) a game: three tumors in turn, "Turn on the beam" and its verdict. Only the
+   tumor shown has its drawing; the opening lights up while the beam is on (the light that passes, warm, over the field),
+   and if it reaches the organ, the organ's edge turns red and blinks three times. The verdict: up to three stars (in
+   the gold's deeper shade, the others outlined), a sentence and three figures. */
+.lx-field .lx-field-art[hidden] { display: none; }
+.lx-which { margin: 0 0 10px; font-family: var(--font-ui); font-size: 15px; color: var(--muted); }
+.lx-ray { position: absolute; inset: 0; pointer-events: none; }
+.lx-ray-row { position: absolute; display: block; opacity: 0; mix-blend-mode: screen; background: rgba(255, 190, 80, 0.5); }
+.lx-field.is-lit .lx-ray-row { opacity: 1; }
+.lx-field.is-organ-hit .lx-organ { stroke: #E2253F; stroke-width: 4; stroke-dasharray: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .lx-ray-row { transition: opacity 0.45s ease; }
+  .lx-field.is-organ-hit .lx-organ { animation: lx-organ-hit 0.45s ease-in-out 0.4s 3; }
+  @keyframes lx-organ-hit { 50% { stroke-opacity: 0.2; } }
+}
+.lx-shape-play { margin-top: 10px; }
+.lx-result > * + * { margin-top: 6px; }
+.lx-stars { display: flex; gap: 4px; }
+.lx-star { display: block; fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-linejoin: round; }
+.lx-star.is-on { fill: var(--gold-text); stroke: var(--gold-text); }
+.lx-verdict { font-weight: 700; }
+.lx-figures { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.lx-status[data-result="tried"] { background: var(--tint); }
+.lx-note { margin: 16px 0 0; font-size: 15px; color: var(--muted); }
+/* The colours of the tumor and the organ, in the leaves' game and the slice: the organ hatched, so that the two differ
+   by more than their colour. */
+.lx-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 14px 0 0; padding: 0;
+  font-family: var(--font-ui); font-size: 14px; font-weight: 600; color: var(--muted); }
+.lx-legend li { display: inline-flex; align-items: center; gap: 8px; }
+.lx-key { flex: none; width: 24px; height: 16px; border-radius: 5px; }
+.lx-key-tumor { background: #B32D7A; border: 2px solid #6E1449; }
+.lx-key-organ { background: repeating-linear-gradient(45deg, #0E8A83 0 2.5px, #CDEFEA 2.5px 6px); border: 2px dashed #0A6660; }
+
+/* 5. Many angles, one target: the slice beside its buttons and lines (under it on phones). Without the script, all
+   five beams and the line for three or more. */
+.lx-angles { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px 44px; margin-top: 32px; align-items: start; }
+@media (min-width: 900px) { .lx-angles { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); } }
+.js .lx-slice-art .lx-beam:not(.is-on) { display: none; }
+.lx-counts { margin-top: 16px; padding: 14px 18px; border-radius: 16px; background: var(--paper); font-weight: 600; }
+.lx-count { margin: 0; }
+.js .lx-count:not(.is-current), .no-js .lx-count:not(:last-child) { display: none; }
+.lx-angles-text { margin: 16px 0 0; }
+
+/* 6. Your treatment journey: the six stages, numbered by their place (so the numbers follow them when they move). */
+.lx-task { margin: 24px 0 0; font-weight: 700; }
+.lx-stages { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; max-width: 920px; counter-reset: lx-stage; }
+.lx-stage { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 16px; padding: 16px 18px; border-radius: 18px; background: var(--bg); counter-increment: lx-stage; }
+.lx-stage::before { content: counter(lx-stage); }
+:root[lang="fa"] .lx-stage::before { content: counter(lx-stage, persian); }
+:root[lang="ar"] .lx-stage::before { content: counter(lx-stage, arabic-indic); }
+.lx-who { margin: 4px 0 0; font-size: 15px; color: var(--muted); }
+.lx-who span { font-weight: 700; color: var(--ink); }
+.lx-stage-body p:last-child { margin: 8px 0 0; }
+.lx-moves { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+@media (min-width: 600px) { .lx-moves { grid-column: 2; } }
+.lx-path-buttons { margin-top: 18px; }
+/* After "Check the order" (since 3 November 2026, Ali's idea and choice): a tick before the name of each stage in its
+   place and a cross before the others, in the quizzes' colours, the cards themselves unchanged; moving a stage clears
+   the marks (linac.js). */
+.lx-stage-mark { display: none; margin-inline-end: 8px; vertical-align: -4px; }
+.lx-stage-mark .icon { width: 24px; height: 24px; stroke-width: 2.6; }
+.lx-stage[data-state="right"] .mark-right { display: inline-flex; color: var(--teal-text); }
+.lx-stage[data-state="wrong"] .mark-wrong { display: inline-flex; color: var(--coral-text); }
+.lx-path-feedback { max-width: 920px; margin-top: 16px; }
+.lx-in-order .lx-label { margin-inline-end: 6px; }
+
+/* 7. Safety by design: the pretend door beside what else keeps people safe, then the checks as calendar cards, the
+   three principles and the card about Iran. */
+.lx-safety { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px 48px; margin-top: 32px; align-items: start; }
+@media (min-width: 900px) { .lx-safety { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); } }
+.lx-door-box > p { margin: 8px 0 0; }
+.lx-door { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 22px; margin: 14px 0 16px; padding: 16px; border-radius: 20px; background: var(--paper); }
+.lx-door-art { display: block; flex: none; width: 200px; max-width: 100%; height: auto; }
+.lx-door-side { flex: 1 1 200px; min-width: 0; }
+/* (2 November 2026) The door's two buttons: the door, and the beam switched on again, as from the control area. */
+.lx-door-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+/* "Switch the beam on" over "(from the control area)", both centred (Ali's idea, 3 November 2026): the same two lines on
+   every screen, instead of a break wherever the line runs out. */
+.lx-beam-on { flex-direction: column; gap: 0; text-align: center; }
+.two-lines { display: block; }
+.lx-door-status { margin: 12px 0 0; font-weight: 700; }
+.no-js .lx-door-status { margin-top: 0; }
+.ld-panel { transition: transform 0.6s ease; }
+.lx-door[data-door="open"] .ld-panel { transform: translateX(84px); }
+.ld-bulb { fill: #F2BE4E; }
+.lx-door[data-beam="off"] .ld-bulb { fill: #3A3157; }
+.lx-door[data-beam="off"] .ld-glow, .lx-door[data-beam="off"] .ld-rays { opacity: 0; }
+.lx-points { margin: 12px 0 0; padding-inline-start: 22px; }
+.lx-points li + li { margin-top: 8px; }
+.lx-sub { margin-top: clamp(40px, 5vw, 56px); padding-top: clamp(24px, 3vw, 32px); border-top: 1.5px solid var(--rule); }
+.lx-sub-intro { margin: 8px 0 0; max-width: 46em; }
+.lx-sub-intro .lx-label { margin-inline-end: 6px; }
+.lx-checks { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+.lx-check { position: relative; overflow: hidden; border-radius: 18px; background: var(--paper); }
+/* a calendar's page: its top in the page's colour, with two rings */
+.lx-check::before, .lx-check::after { content: ''; position: absolute; top: 7px; width: 9px; height: 9px; border-radius: 50%; background: var(--paper); }
+.lx-check::before { inset-inline-start: 24px; }
+.lx-check::after { inset-inline-end: 24px; }
+.lx-when { margin: 0; padding: 22px 18px 10px; background: var(--tone-chip); color: var(--tone-chip-fg); font-family: var(--font-ui); font-size: 17px; font-weight: 700; line-height: 1.3; }
+.lx-check-body { padding: 12px 18px 18px; }
+.lx-check-body p { margin: 0; }
+.lx-check-body p + p { margin-top: 6px; }
+.lx-check-who { font-weight: 700; }
+.lx-principles { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.lx-principle { padding: 20px 22px 22px; border-radius: 20px; border-top: 6px solid var(--violet); background: var(--paper); }
+.lx-principle h4 { margin: 0; font-family: var(--font-h3); font-size: 22px; font-weight: var(--w-h3); line-height: var(--lh-h3); }
+.lx-principle p { margin: 8px 0 0; }
+/* (Ali, 4 November 2026) side by side, the boxes of a set are one size, also a box in a row of its own: rows of one
+   height (site.js sets is-even where there are two columns or more): the calendar cards and the three principles here,
+   and Where to start learning on Standards in Medicine (.starts); on phones each fits its text. */
+.starts.is-even, .lx-checks.is-even, .lx-principles.is-even { grid-auto-rows: 1fr; }
+/* (Ali, 4 November 2026) the three principles and who licenses it in Iran are purple boxes: their links take their purple,
+   not the page's teal (the label "General principle" keeps the page's colour, as everywhere) */
+.lx-protection, .lx-iran { --link-tone: var(--violet); }
+.lx-iran { padding: clamp(20px, 3vw, 30px); border: 0; border-radius: 24px; border-top: 6px solid var(--violet); background: var(--paper); }
+.lx-iran p { max-width: 52em; }
+.lx-iran-label { margin: 12px 0 0; }
+.lx-iran .lx-source { margin-top: 20px; }
+
+/* 8. Who does what: a card for each person, like the starting points on Standards in Medicine. */
+.lx-roles { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.lx-role { padding: 22px clamp(20px, 2.4vw, 28px) 24px; border-radius: 24px; border-top: 6px solid var(--tone); background: var(--bg); }
+.lx-role p { margin: 8px 0 0; }
+/* (Ali's idea, 4 November 2026) Where the cards stand side by side, all six are one size: linac.js gives them the
+   height of the tallest of the others when one is much longer, and that one shows its first lines, fading out, and
+   "Show more", which opens it in place. On phones, and without the script, every card shows all of its text. */
+.lx-roles.is-even { align-items: start; }
+.lx-role.is-clamped p { overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 2.4em), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 2.4em), transparent); }
+.lx-more { display: inline-flex; margin-top: 10px; padding: 0; border: 0; background: none; color: var(--tone-text); font: 700 15px/1.5 var(--font-ui); text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; cursor: pointer; }
+.lx-more:hover, .lx-more:focus-visible { text-decoration-thickness: 3px; }
+.lx-others { margin: 20px 0 0; max-width: 60em; color: var(--muted); }
+
+/* 9 and 10. The quiz; the words of the tutorial beside its sources (one under the other on narrower screens). */
+.lx-quiz .quiz { margin-top: 32px; }
+.lx-words { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px 56px; margin-top: 32px; align-items: start; }
+@media (min-width: 1024px) { .lx-words { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.lx-terms { margin: 14px 0 0; }
+.lx-term { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.lx-term dt { font-weight: 700; }
+.lx-term dd { margin: 2px 0 0; color: var(--muted); }
+/* The page's main term (Ali's idea and choice, 3 November 2026): in its place, on a band in the page's colour, a
+   stronger edge where reading starts and a label (not colour alone). */
+.lx-term.is-main { margin: 6px 0; padding: 14px 16px; border-bottom: 0; border-radius: 16px; background: var(--tone-soft);
+  box-shadow: inset 4px 0 0 var(--tone); }
+[dir="rtl"] .lx-term.is-main { box-shadow: inset -4px 0 0 var(--tone); }
+.lx-term.is-main dd { color: var(--ink); }
+.lx-main-tag { display: inline-block; margin-inline-start: 8px; padding: 1px 10px; border-radius: 999px; background: var(--tone-chip);
+  color: var(--tone-chip-fg); font: 700 13px/1.6 var(--font-ui); vertical-align: 2px; }
+.lx-checked { margin: 10px 0 0; }
+.lx-order { margin: 4px 0 0; }
+.lx-sources { margin: 14px 0 0; padding-inline-start: 26px; display: grid; gap: 12px; font-size: 15px; }
+:root[lang="fa"] .lx-sources { list-style-type: persian; }
+:root[lang="ar"] .lx-sources { list-style-type: arabic-indic; }
+.lx-ref { margin: 0; line-height: 1.5; }
+[dir="rtl"] .lx-ref { text-align: right; }       /* an English reference keeps to the page's start edge */
+.lx-ref a { font-weight: 700; }
+.lx-ref cite { font-style: normal; }
+.lx-ref-by { display: block; margin-top: 2px; font-size: 14px; color: var(--muted); }
+/* At the end of the page, above the review date: the short version of "Before you start". */
+.page-end .lx-closing { margin: 0 0 14px; max-width: 52em; padding: 12px 16px; border-inline-start: 4px solid var(--page-tone, var(--coral)); border-radius: 0 12px 12px 0;
+  background: var(--tint); color: var(--ink); font-weight: 600; }
+[dir="rtl"] .lx-closing { border-radius: 12px 0 0 12px; }
 
 /* ------------------------------------------------------------ the stories behind the pictures (since version 3.00) */
 /* Ali's ideas (28 and 30 October 2026): an easter egg. Each animated picture keeps all its stories, and each visit
