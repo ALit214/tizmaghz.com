@@ -235,7 +235,7 @@ main:focus, .hero-name:focus { outline: none; }
   text-decoration-thickness: 2px; text-underline-offset: 6px;
 }
 /* Each item's own colour (since version 3.00): its circle in the phone menu, and its underline, under the pointer and
-   where you are. Home's is the text colour, Home's alone by Ali's rule (see the phone menu below). */
+   where you are. Home's is the text colour, Home's alone in the top menu by Ali's rule (see the phone menu below). */
 .nav-home > a { --dot: var(--ink); }
 .nav-work > a { --dot: var(--teal); }
 .nav-expertise > a { --dot: var(--coral); }
@@ -358,8 +358,11 @@ main:focus, .hero-name:focus { outline: none; }
   .site-nav a::before { content: ''; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--dot, var(--teal)); }
   /* Each section keeps its colour (its item's --dot, set above). Home's circle is filled in the text colour: white in
      the dark theme, near-black in the light one (Ali's choice, 28 October 2026, for version 3.00; until then it was a
-     ring). Ali's rule: Home's is the only circle in that colour, ever; no other or new item or button may take it,
-     for a filled circle or an open one: each has a colour of its own. (tests/menu_and_scrolling.py checks this.) */
+     ring). Ali's rule: in the top menu, Home's is the only circle in that colour; no other or new item may take it,
+     for a filled circle or an open one: each has a colour of its own. (tests/menu_and_scrolling.py checks this.) Since
+     4 November 2026 the rule applies only in the top menu (Ali adjusted it: "we can adjust this rule a bit for it to
+     apply only in the top menu"): elsewhere black and white may be used, and on the home page they are the page's own
+     colour, as for the foot's links and the round sound button (3.02). */
   /* Explore & learn heads its list, as on computers (Ali's choice, 28 October 2026): its name, in its colour but not a
      link, then the activities and the pages of their own under it, smaller. Each row leads to one place. The items
      under it have open circles, in their colours (Ali's idea, 28 October 2026, for version 3.00), as the inner items
@@ -637,19 +640,28 @@ main:focus, .hero-name:focus { outline: none; }
 }
 .act-link:hover { background: var(--tint); }
 .act-link[aria-current="true"] { background: var(--tone-chip); color: var(--tone-chip-fg); border-color: var(--tone-chip); }
+/* (3.02, Ali's choice of 4 November 2026) The sound button is round, like the logo's pause button: the speaker in a
+   circle of the same size (44 px), outlined in the text colour when off and filled with it when on (black, white in
+   the dark theme: the home page's own colour, as Ali's adjusted rule allows outside the top menu), with "Sound
+   effects:" beside it and "off" or "on" in bold; under the pointer, the soft tint inside the circle. So round buttons
+   mean sound and motion, and the pill-shaped ones the activities. */
 .sound-switch {
-  display: inline-flex; align-items: center; gap: 0; min-height: 44px; padding: 0 16px; border-radius: 999px;
-  border: 1.5px solid var(--ink); background: transparent; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0; min-height: 44px; padding: 0; padding-inline-end: 6px;
+  border: 0; border-radius: 22px; background: transparent; color: var(--ink); cursor: pointer;
   font-family: var(--font-ui); font-size: 14px; font-weight: 600;
 }
-.sound-switch .icon { margin-inline-end: 6px; }
-/* On wider screens the sound switch keeps to the end of its row, also when it moves under the menu. */
+.sound-switch .icon {
+  flex: none; width: 44px; height: 44px; box-sizing: border-box; padding: 11px; margin-inline-end: 10px;
+  border: 1.5px solid var(--ink); border-radius: 50%; background: transparent; color: var(--ink);
+}
+.sound-switch .sound-state { font-weight: 700; }
+/* On wider screens the sound button keeps to the end of its row, also when it moves under the menu. */
 @media (min-width: 900px) { .sound-switch { margin-inline-start: auto; } }
 .sound-switch .icon-sound-on, .sound-switch[aria-checked="true"] .icon-sound-off { display: none; }
 .sound-switch[aria-checked="true"] .icon-sound-on { display: block; }
-.sound-switch[aria-checked="true"] { background: var(--press-bg); color: var(--press-fg); border-color: var(--press-bg); }
-.sound-switch:hover { background: var(--tint); }
-.sound-switch[aria-checked="true"]:hover { background: var(--solid-hover); }
+.sound-switch[aria-checked="true"] .icon { background: var(--press-bg); color: var(--press-fg); border-color: var(--press-bg); }
+.sound-switch:hover .icon { background: var(--tint); }
+.sound-switch[aria-checked="true"]:hover .icon { background: var(--solid-hover); border-color: var(--solid-hover); }
 
 .activities { margin-top: 24px; display: grid; gap: 24px; }
 .activity { background: var(--paper); border-radius: 28px; overflow: hidden; scroll-margin-top: 110px; }
@@ -819,6 +831,55 @@ main:focus, .hero-name:focus { outline: none; }
 .sort-group { display: block; font-family: var(--font-ui); font-size: 15px; font-weight: 700; line-height: 1.4; color: var(--muted); }
 .sort-item .sort-group { margin-bottom: 6px; }
 .sort-key .sort-group { margin-bottom: 2px; }
+
+/* Clean, disinfected or sterile? (since version 3.02): three words, the classes and the nine items (Sort the
+   equipment's card, with the question above the item), the scissors' journey (numbered by place, so the numbers stay
+   put while the steps move; marked after a check as on Inside a LINAC), the fork, the checks and two cases. */
+.st-words { margin-top: 28px; }
+.st-words > h4, .st-journey h5, .st-case-title {
+  margin: 0; font-family: var(--font-ui); font-size: 19px; font-weight: 700; line-height: 1.35;
+}
+.st-list { margin: 12px 0 0; padding-inline-start: 1.25em; display: grid; gap: 8px; max-width: 44em; }
+.st-list li::marker { color: var(--tone); }
+.st-note, .st-single, .st-fork { margin: 14px 0 0; max-width: 44em; }
+.st-note { font-size: 15px; color: var(--muted); }
+/* (3.02, Ali, 6 November 2026) The further-reading line stands apart from the notes and from the sources at the end:
+   a box with a rule in the activity's colour, as "About this page" at the top of the pages of their own, its words in
+   the text's size and colour and its name in bold. */
+.st-note.st-further { margin-top: 24px; padding: 14px 18px; border-inline-start: 4px solid var(--tone); border-radius: 0 12px 12px 0;
+  background: var(--tint); font-size: inherit; color: var(--ink); }
+[dir="rtl"] .st-note.st-further { border-radius: 12px 0 0 12px; }
+.st-sort { margin-top: 24px; }
+.st-pick { margin: 0 0 14px; max-width: 44em; }
+.st-ask { margin: 18px 0 0; font-weight: 700; }
+.st-ask + .sort-item { margin-top: 4px; }
+.st-steps { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; max-width: 920px; counter-reset: st-step; }
+.st-step {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 16px; padding: 16px 18px; border-radius: 18px;
+  background: var(--bg); counter-increment: st-step;
+}
+.st-step::before {
+  content: counter(st-step); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;
+  border-radius: 50%; background: var(--tone-chip); color: var(--tone-chip-fg); font-family: var(--font-ui); font-size: 15px;
+  font-weight: 700; line-height: 1;
+}
+:root[lang="fa"] .st-step::before { content: counter(st-step, persian); }
+:root[lang="ar"] .st-step::before { content: counter(st-step, arabic-indic); }
+.st-step-body p { margin: 6px 0 0; }
+.st-moves { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+@media (min-width: 600px) { .st-moves { grid-column: 2; } }
+@media (max-width: 599.98px) { .st-moves { gap: 6px; } .st-moves .btn-small { padding-inline: 14px; } }
+.st-mark { display: none; margin-inline-end: 8px; vertical-align: -4px; }
+.st-mark .icon { width: 24px; height: 24px; stroke-width: 2.6; }
+.st-step[data-state="right"] .mark-right { display: inline-flex; color: var(--teal-text); }
+.st-step[data-state="wrong"] .mark-wrong { display: inline-flex; color: var(--coral-text); }
+.st-path-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.st-path-feedback { max-width: 920px; margin-top: 16px; }
+.st-path-feedback p { margin: 0; font-weight: 700; }
+.st-journey .st-fork-title { margin-top: 28px; }
+.st-case-title { margin-bottom: 8px; }
+.st-story { margin: 0 0 12px; max-width: 44em; }
+.st-licence { margin-top: 6px; }
 
 /* From lab to clinic */
 .trials-art .tr-item { transition: opacity 0.45s ease; }
@@ -1229,6 +1290,27 @@ main:focus, .hero-name:focus { outline: none; }
 .primer-text p { margin: 0; max-width: 40em; }
 .primer-text p + p { margin-top: 14px; }
 @media (max-width: 899.98px) { .primer-row { grid-template-columns: minmax(0, 1fr); } }
+/* (3.02, Ali's idea of 6 November 2026) What this page covers: the page's groups, two side by side where there is room,
+   each name a link with a small square in its colour (its cards'), its underline in that colour by the one rule for
+   links; under it its standards' numbers, smaller, each a link to its card; then the quiz and the table, each under
+   one of the two columns, in line with the names above it (Ali, the same evening). A list for finding one's way, so
+   (Ali, the same evening) its links keep the navigation's own way, as the foot's and the Site Map's: no underline until
+   the pointer or the keyboard reaches them, then one in the group's colour (the quiz's and the table's in the page's). */
+.fam-map { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 20px 40px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+.fam-name {
+  display: inline-flex; align-items: center; gap: 12px; min-height: 44px; font-family: var(--font-ui); font-size: 17px; font-weight: 700;
+  text-decoration: none; text-decoration-thickness: 2px; text-underline-offset: 5px;
+}
+.fam-name:hover, .fam-name:focus-visible { text-decoration-line: underline; text-decoration-color: var(--tone); }
+.fam-mark { flex: none; width: 12px; height: 12px; border-radius: 3px; background: var(--tone); }
+.primer-text .fam-refs { margin: 0; padding-inline-start: 24px; font-size: 14px; line-height: 1.75; color: var(--muted); }
+.fam-refs a { color: inherit; text-decoration: none; text-underline-offset: 3px; }
+.fam-refs a:hover, .fam-refs a:focus-visible { color: var(--ink); text-decoration-line: underline; text-decoration-color: var(--tone); }
+.fam-more { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 4px 40px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+.fam-more li { padding-inline-start: 24px; }
+.fam-more a { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-ui); font-weight: 600;
+  text-decoration: none; text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.fam-more a:hover, .fam-more a:focus-visible { text-decoration-line: underline; text-decoration-color: var(--page-tone); }
 /* The cards, as the entries of Books & Guidelines, in their family's colour: the standard's number big where a book
    shows its year (the publisher's name small above it; the card's heading says both, for screen readers), the
    official title and current edition in English, then what it covers, who uses it and why it matters. */
@@ -1290,10 +1372,16 @@ main:focus, .hero-name:focus { outline: none; }
    std_where). The same soft grey as on Books & Guidelines, not the family's colour (Ali: "there is too much color"). */
 .where-standards tr:target ~ tr:not(.src-first:not(.shares-card)):not(tr:target ~ .src-first:not(.shares-card) ~ tr) { background: var(--tint); }
 /* Each standard's name leads back to its card (Ali, 29 October 2026): the name as it was, in the weight of the
-   table's names, with a plain link's underline, and at least 24 pixels tall for a fingertip. */
+   table's names, and at least 24 pixels tall for a fingertip. */
 .where-standards tbody th .to-card { display: inline-flex; align-items: center; min-height: 24px; font-weight: inherit; }
 /* Books & Guidelines, the same (Ali, 1 November 2026): each item's title leads back to its card. */
 .where tbody th .to-card { font-weight: inherit; }
+/* (3.02, Ali, 6 November 2026) These names only lead back to their cards on the same page, so they keep the
+   navigation's way, as What this page covers does: no underline until the pointer or the keyboard reaches them, then
+   one in the group's colour. The links that leave the page (the editions, the publishers) keep their underline. Screen
+   readers still hear each one as a link ("... (its card)"), and the keyboard's ring is unchanged. */
+.where tbody th .to-card { text-decoration-line: none; }
+.where tbody th .to-card:hover, .where tbody th .to-card:focus-visible { text-decoration-line: underline; text-decoration-color: var(--tone); }
 /* The small (i) of an edition, like a footnote's mark (Ali's choice, 29 October 2026): small and raised, just after
    the edition's name and outside it, so the names of all the sources are centred alike. The mark is small, but its
    button is as tall as the line and wide enough for a fingertip (26 by 30 pixels), beside the name, not over it.
@@ -1337,6 +1425,9 @@ main:focus, .hero-name:focus { outline: none; }
 /* Where to start learning: free starting points, each a link with a coloured top edge, like the doors to these pages. */
 .starts { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
 .start { padding: 22px clamp(20px, 2.4vw, 30px) 26px; border-radius: 24px; border-top: 6px solid var(--tone); background: var(--bg); }
+/* (3.02) With the sixth family the bands after the families turned the other way round (build.py, standards), so this
+   section is no longer a paper band: the starting points then take the paper colour, so they still stand out from it. */
+.band:not(.band-paper) .start { background: var(--paper); }
 .start-name {
   display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-ui); font-size: 18px; font-weight: 700;
   text-decoration: underline; text-decoration-color: var(--tone); text-decoration-thickness: 3px; text-underline-offset: 6px;

@@ -1106,9 +1106,9 @@
   // classes: the answer shows with its reason and a link to the device's entry in the FDA's database. Once all
   // eight are sorted, a button opens the second round below: eight more devices in Iran's four classes, A to D,
   // each shown with its group in the guide.
-  (function () {
-    var panel = $('#act-sort');
-    if (!panel || !DATA.sort) return;
+  // (3.02) The same card sorts the nine items of Clean, disinfected or sterile? into Spaulding's three classes, with
+  // that activity's own verdicts (data.right, data.wrong) and, for the bedpan, a second right class (item.also):
+  // either is right, and the verdict adds that both can be.
     function sorter(root, data) {
       var card = $('[data-sort-card]', root);
       var itemEl = $('[data-sort-item]', root);
@@ -1144,15 +1144,19 @@
         var b = ev.target.closest ? ev.target.closest('.choice') : null;
         if (!b || b.getAttribute('aria-disabled') === 'true' || index >= items.length) return;
         var item = items[index];
-        var right = parseInt(b.getAttribute('data-choice'), 10) === item.answer;
+        var picked = parseInt(b.getAttribute('data-choice'), 10);
+        var right = picked === item.answer || picked === item.also;
         choices.forEach(function (o) {
-          var isAnswer = parseInt(o.getAttribute('data-choice'), 10) === item.answer;
+          var c = parseInt(o.getAttribute('data-choice'), 10);
+          var isAnswer = c === item.answer || c === item.also;
           if (o === b) o.setAttribute('data-state', right ? 'right' : 'wrong');
           else if (isAnswer && !right) o.setAttribute('data-state', 'answer');
           else o.removeAttribute('data-state');
           o.setAttribute('aria-disabled', 'true');
         });
-        verdict.textContent = fill(right ? T.sortRight : T.sortWrong, { category: cats[item.answer - 1] });
+        var shown = cats[(right ? picked : item.answer) - 1];
+        if (item.also) verdict.textContent = (right ? fill(data.right, { 'class': shown }) : data.notQuite) + ' ' + data.both;
+        else verdict.textContent = fill(right ? (data.right || T.sortRight) : (data.wrong || T.sortWrong), { category: shown, 'class': shown });
         reason.textContent = item.reason;
         if (source && item.source) source.setAttribute('href', item.source);
         feedback.setAttribute('data-result', right ? 'right' : 'wrong');
@@ -1175,6 +1179,9 @@
         restore: function (step) { if (step >= 0 && step <= items.length) { index = step; show(false); } }
       };
     }
+  (function () {
+    var panel = $('#act-sort');
+    if (!panel || !DATA.sort) return;
     var fda = sorter($('[data-sort-round="fda"]', panel), DATA.sort);
     // The second round: it appears below the first, and the page goes to its heading, which takes the keyboard.
     var iranBox = $('[data-sort-iran]', panel);
@@ -1200,6 +1207,105 @@
         if (!st) return;
         fda.restore(st.step);
         if (iran && st.iran) { open = true; renderIran(); iran.restore(st.istep || 0); }
+      }
+    };
+  })();
+
+  // Clean, disinfected or sterile? The journey of a reusable instrument (since version 3.02, phase 5's first piece).
+  // Part 1: the nine items, one at a time, into Spaulding's three classes (the sorter above). Part 2: the scissors'
+  // journey, mixed up, put in order with the arrows (Move up, Move down: named with their step for screen readers),
+  // then "Check the order": each step is marked in its place (a tick) or not yet (a cross), as on Inside a LINAC,
+  // never where it belongs; moving a step clears the marks; all eight in order, the cells' burst. "Mix them up again"
+  // starts again. Parts 3 and 4 are cases like those of Repair or replace? (above). Without the script every list
+  // shows in order, with its answers.
+  (function () {
+    var panel = $('#act-steril');
+    if (!panel || !DATA.steril) return;
+    var classes = sorter($('[data-sort-round="steril"]', panel), DATA.steril);
+    var list = $('[data-st-steps]', panel);
+    var box = list.closest('.st-journey');
+    var check = $('[data-st-check]', box);
+    var mixBtn = $('[data-st-mix]', box);
+    var feedback = $('[data-st-feedback]', box);
+    var inOrder = $('.st-in-order', feedback);
+    var notYet = $('.st-not-yet', feedback);
+    var ORDER = $all('.st-step', list).map(function (li) { return li.getAttribute('data-step'); });   // the right order
+    var FIRST = [4, 6, 0, 7, 1, 2, 3, 5];   // the first mix-up, the same in every language: no step in its place
+    var MARK = { right: list.getAttribute('data-mark-right'), wrong: list.getAttribute('data-mark-wrong') };
+    var SEP = LANG === 'fa' || LANG === 'ar' ? '\u060C ' : ', ';
+    function steps() { return $all('.st-step', list); }
+    function order() { return steps().map(function (li) { return ORDER.indexOf(li.getAttribute('data-step')); }); }
+    function disable(b, off) { if (b) b.setAttribute('aria-disabled', off ? 'true' : 'false'); }
+    function buttons() {
+      var all = steps();
+      all.forEach(function (li, k) {
+        disable($('[data-st-up]', li), k === 0);
+        disable($('[data-st-down]', li), k === all.length - 1);
+      });
+    }
+    function mark(li, state) {
+      if (state) li.setAttribute('data-state', state); else li.removeAttribute('data-state');
+      $('[data-st-state]', li).textContent = state ? SEP + MARK[state] : '';
+    }
+    function quiet() {
+      feedback.classList.remove('is-shown');
+      feedback.removeAttribute('data-result');
+      steps().forEach(function (li) { mark(li, null); });
+    }
+    function arrange(o) {
+      var by = {};
+      steps().forEach(function (li) { by[li.getAttribute('data-step')] = li; });
+      o.forEach(function (k) { list.appendChild(by[ORDER[k]]); });
+      buttons();
+      quiet();
+    }
+    function mixed() {             // a new mix-up: no step in its place, and not the one shown now
+      var now = order().join();
+      for (;;) {
+        var o = ORDER.map(function (s, k) { return k; });
+        for (var i = o.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = o[i]; o[i] = o[j]; o[j] = x; }
+        if (o.every(function (k, i) { return k !== i; }) && o.join() !== now) return o;
+      }
+    }
+    on(list, 'click', function (ev) {
+      var b = ev.target.closest ? ev.target.closest('[data-st-up], [data-st-down]') : null;
+      if (!b || b.getAttribute('aria-disabled') === 'true') return;
+      var li = b.closest('.st-step');
+      var up = b.hasAttribute('data-st-up');
+      var other = up ? li.previousElementSibling : li.nextElementSibling;
+      if (!other) return;
+      if (up) list.insertBefore(li, other); else list.insertBefore(other, li);
+      try { b.focus({ preventScroll: true }); } catch (e) { b.focus(); }    // the button moved with its step
+      buttons();
+      quiet();
+      announce(digits(steps().indexOf(li) + 1) + '. ' + $('h5', li).textContent);
+    });
+    on(check, 'click', function () {
+      var n = 0;
+      steps().forEach(function (li, k) {
+        var ok = li.getAttribute('data-step') === ORDER[k];
+        if (ok) n += 1;
+        mark(li, ok ? 'right' : 'wrong');
+      });
+      var all = n === ORDER.length;
+      inOrder.hidden = !all;
+      notYet.hidden = all;
+      feedback.setAttribute('data-result', all ? 'right' : 'wrong');
+      feedback.classList.add('is-shown');
+      announce(all ? inOrder.textContent : notYet.textContent);
+      Sound.play(all ? 'done' : 'again');
+      if (all) burst(inOrder);
+    });
+    on(mixBtn, 'click', function () { arrange(mixed()); announce($('.sub-intro', box).textContent); });
+    inOrder.hidden = true;
+    arrange(FIRST);
+    activities.steril = {
+      state: function () { return { step: classes.step(), order: order() }; },
+      restore: function (st) {
+        if (!st) return;
+        classes.restore(st.step);
+        var o = st.order;
+        if (o && o.length === ORDER.length && ORDER.every(function (s, k) { return o.indexOf(k) >= 0; })) arrange(o);
       }
     };
   })();
@@ -1610,6 +1716,22 @@
     even();
     on(window, 'resize', function () { clearTimeout(timer); timer = setTimeout(even, 120); });
   })();
+
+  // ---------------------------------------------------------------- What this page covers (Standards in Medicine)
+  // (3.02, Ali's idea of 6 November 2026) A group's name, one of its standards' numbers, the quiz or the table: the page
+  // glides there (the browser's own smooth scrolling, at once with reduced motion), and the keyboard focus moves to the
+  // heading it lands on, so the next Tab and a screen reader carry on from there.
+  $all('.fam-map a[href^="#"], .fam-more a[href^="#"]').forEach(function (a) {
+    on(a, 'click', function (ev) {
+      if (ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+      var target = doc.getElementById(a.getAttribute('href').slice(1));
+      var head = target && (/^H[1-6]$/.test(target.tagName) ? target : $('h2, h3', target));
+      if (!head) return;
+      if (!head.hasAttribute('tabindex')) head.setAttribute('tabindex', '-1');
+      // after the browser's own jump, which clears the focus when the place it goes to can't take it
+      setTimeout(function () { try { head.focus({ preventScroll: true }); } catch (e) { /* it still scrolls there */ } }, 0);
+    });
+  });
 
   // ---------------------------------------------------------------- back to the top
   // "Back to top" and the name in the header go to the very top of the page. (The browser's own jump
