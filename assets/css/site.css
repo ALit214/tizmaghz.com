@@ -291,8 +291,10 @@ main:focus, .hero-name:focus { outline: none; }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
 .lang-switch, .theme-switch { display: flex; gap: 6px; }
 .theme-switch { gap: 4px; }
+/* (3.03, 7 November 2026) The three language buttons the same size: the widest name, English, sets the width, and the
+   names are centred (Ali: "yes, i am good with it"). */
 .lang-switch a, .lang-current {
-  display: inline-flex; align-items: center; min-height: 40px; padding: 0 13px;
+  display: inline-flex; align-items: center; justify-content: center; min-width: 77px; min-height: 40px; padding: 0 13px;
   border: 1.5px solid var(--ink); border-radius: 999px;
   font-family: var(--font-latin); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap;
 }
@@ -488,6 +490,10 @@ main:focus, .hero-name:focus { outline: none; }
   font-size: var(--size-h2); line-height: var(--lh-h2); letter-spacing: var(--track-head);
 }
 .section-head p { margin: 0; max-width: 32em; color: var(--muted); }
+/* (Ali, 9 November 2026) On the pages of their own, a group's line sits under its heading on computers too, as on
+   phones: "Machines that treat cancer with radiation." under Radiotherapy, not apart at the side (the home page keeps
+   its lines beside its headings). */
+main.learn .section-head { flex-direction: column; align-items: flex-start; }
 /* The heading and its short line, which changes on each visit; the same grey type as the opening line. */
 .section-title { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .section-head .section-line {
@@ -1306,6 +1312,10 @@ main:focus, .hero-name:focus { outline: none; }
 .primer-text .fam-refs { margin: 0; padding-inline-start: 24px; font-size: 14px; line-height: 1.75; color: var(--muted); }
 .fam-refs a { color: inherit; text-decoration: none; text-underline-offset: 3px; }
 .fam-refs a:hover, .fam-refs a:focus-visible { color: var(--ink); text-decoration-line: underline; text-decoration-color: var(--tone); }
+/* (3.03, 9 November 2026) The standard numbers under each family are one box each, as the names in the tables:
+   in Firefox, a link whose text is marked as its own piece (dir="ltr") can have its keyboard ring split, with an
+   extra line at its end (Ali's screenshots of 9 November 2026). */
+.fam-refs a { display: inline-block; }
 .fam-more { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 4px 40px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
 .fam-more li { padding-inline-start: 24px; }
 .fam-more a { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-ui); font-weight: 600;
@@ -1374,8 +1384,11 @@ main:focus, .hero-name:focus { outline: none; }
 /* Each standard's name leads back to its card (Ali, 29 October 2026): the name as it was, in the weight of the
    table's names, and at least 24 pixels tall for a fingertip. */
 .where-standards tbody th .to-card { display: inline-flex; align-items: center; min-height: 24px; font-weight: inherit; }
-/* Books & Guidelines, the same (Ali, 1 November 2026): each item's title leads back to its card. */
-.where tbody th .to-card { font-weight: inherit; }
+/* Books & Guidelines, the same (Ali, 1 November 2026): each item's title leads back to its card. (3.03, 9 November
+   2026) Now also as one box at least 24 pixels tall, as on Standards in Medicine: as a plain link, the keyboard's ring
+   could be drawn around each of its pieces (the English title, then the hidden "(its card)"), with an extra line at
+   the title's end (Ali's screenshot of 9 November 2026). */
+.where tbody th .to-card { display: inline-flex; align-items: center; min-height: 24px; font-weight: inherit; }
 /* (3.02, Ali, 6 November 2026) These names only lead back to their cards on the same page, so they keep the
    navigation's way, as What this page covers does: no underline until the pointer or the keyboard reaches them, then
    one in the group's colour. The links that leave the page (the editions, the publishers) keep their underline. Screen
@@ -1469,7 +1482,8 @@ main:focus, .hero-name:focus { outline: none; }
 .lx-head p { margin-top: 12px; }
 .lx-room-pic, .lx-journey-pic, .lx-angles-pic, .lx-frame {
   aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; border-radius: 20px;
-  background: radial-gradient(ellipse 80% 70% at 50% 35%, #170D31, #0C0618);
+  background: #0C0618 radial-gradient(ellipse 80% 70% at 50% 35%, #170D31, #0C0618);   /* (3.03) under the night, its darkest
+     colour, the same to the eye: for what reads colours without the gradient (the contrast of the slice's ruler) */
 }
 .lx-room-pic .lx-pic { width: 100%; }
 .lx-journey-pic .lx-pic { height: 100%; width: auto; aspect-ratio: 480 / 420; }
@@ -1716,7 +1730,10 @@ main:focus, .hero-name:focus { outline: none; }
 .lx-check::before, .lx-check::after { content: ''; position: absolute; top: 7px; width: 9px; height: 9px; border-radius: 50%; background: var(--paper); }
 .lx-check::before { inset-inline-start: 24px; }
 .lx-check::after { inset-inline-end: 24px; }
-.lx-when { margin: 0; padding: 22px 18px 10px; background: var(--tone-chip); color: var(--tone-chip-fg); font-family: var(--font-ui); font-size: 17px; font-weight: 700; line-height: 1.3; }
+/* (3.03, Ali's idea of 6 November 2026) The calendar cards' titles centred, under the two white circles of their top edge.
+   (Ali, 9 November 2026) and one height: site.js gives every title of a calendar the tallest one's height where the
+   cards stand side by side, and a shorter title sits in the middle of it. */
+.lx-when { display: flex; align-items: center; justify-content: center; margin: 0; padding: 22px 18px 10px; background: var(--tone-chip); color: var(--tone-chip-fg); font-family: var(--font-ui); font-size: 17px; font-weight: 700; line-height: 1.3; text-align: center; }
 .lx-check-body { padding: 12px 18px 18px; }
 .lx-check-body p { margin: 0; }
 .lx-check-body p + p { margin-top: 6px; }
@@ -1727,8 +1744,10 @@ main:focus, .hero-name:focus { outline: none; }
 .lx-principle p { margin: 8px 0 0; }
 /* (Ali, 4 November 2026) side by side, the boxes of a set are one size, also a box in a row of its own: rows of one
    height (site.js sets is-even where there are two columns or more): the calendar cards and the three principles here,
-   and Where to start learning on Standards in Medicine (.starts); on phones each fits its text. */
-.starts.is-even, .lx-checks.is-even, .lx-principles.is-even { grid-auto-rows: 1fr; }
+   and Where to start learning on Standards in Medicine (.starts); on phones each fits its text. (3.03, Ali, 9 November
+   2026) The same on Inside an MRI: its four hazards, its three labels and its three cases. */
+.starts.is-even, .lx-checks.is-even, .lx-principles.is-even,
+.mx-hazards.is-even, .mx-labels.is-even, .mx-cases.is-even { grid-auto-rows: 1fr; }
 /* (Ali, 4 November 2026) the three principles and who licenses it in Iran are purple boxes: their links take their purple,
    not the page's teal (the label "General principle" keeps the page's colour, as everywhere) */
 .lx-protection, .lx-iran { --link-tone: var(--violet); }
@@ -1736,6 +1755,12 @@ main:focus, .hero-name:focus { outline: none; }
 .lx-iran p { max-width: 52em; }
 .lx-iran-label { margin: 12px 0 0; }
 .lx-iran .lx-source { margin-top: 20px; }
+/* (3.03) Inside an MRI: its checks, its three ideas of MR safety and its licensing in Iran are parts of their own
+   (build.py mx_checks, mx_principles, mx_iran), so their boxes need no rule above them; the Iran box keeps its own. */
+.mx-sub:not(.lx-iran) { margin-top: 0; padding-top: 0; border-top: 0; }
+.lx-iran.mx-sub { margin-top: 8px; }
+.mx-sub > .lx-sub-intro:first-child, .mx-sub > .lx-iran-label:first-child { margin-top: 0; }
+.lx-deep-label { margin-top: 10px; }
 
 /* 8. Who does what: a card for each person, like the starting points on Standards in Medicine. */
 .lx-roles { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
@@ -1752,10 +1777,20 @@ main:focus, .hero-name:focus { outline: none; }
 
 /* 9 and 10. The quiz; the words of the tutorial beside its sources (one under the other on narrower screens). */
 .lx-quiz .quiz { margin-top: 32px; }
-.lx-words { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px 56px; margin-top: 32px; align-items: start; }
-@media (min-width: 1024px) { .lx-words { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+/* Since 3.03 (Ali's choice C of 9 November 2026): the words, then the sources, one after the other, each in two
+   columns on wide screens, so no column stands empty beside a longer one; the sources folded behind a button. */
+.lx-words { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; margin-top: 32px; align-items: start; }
+/* Two columns filled down, the first (where reading starts: the left in English, the right in Persian and Arabic)
+   with half of the list rounded up (--rows, from build.py), row by row, so it is never the shorter (Ali's point,
+   9 November 2026); the items of a row line up. */
+@media (min-width: 1024px) {
+  .lx-terms, .lx-sources { display: grid; grid-auto-flow: column; grid-template-rows: repeat(var(--rows), auto);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 56px; }
+  .lx-sources { row-gap: 12px; }
+  .lx-sources > li { margin-bottom: 0; }
+}
 .lx-terms { margin: 14px 0 0; }
-.lx-term { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.lx-term { padding: 12px 0; border-bottom: 1px solid var(--rule); break-inside: avoid; }
 .lx-term dt { font-weight: 700; }
 .lx-term dd { margin: 2px 0 0; color: var(--muted); }
 /* The page's main term (Ali's idea and choice, 3 November 2026): in its place, on a band in the page's colour, a
@@ -1768,7 +1803,16 @@ main:focus, .hero-name:focus { outline: none; }
   color: var(--tone-chip-fg); font: 700 13px/1.6 var(--font-ui); vertical-align: 2px; }
 .lx-checked { margin: 10px 0 0; }
 .lx-order { margin: 4px 0 0; }
-.lx-sources { margin: 14px 0 0; padding-inline-start: 26px; display: grid; gap: 12px; font-size: 15px; }
+.lx-sources { margin: 14px 0 0; padding-inline-start: 26px; font-size: 15px; }
+.lx-sources > li { margin-bottom: 12px; break-inside: avoid; }
+/* The button that opens the list: Go deeper's panel, as a pill on the page's paper; its words say what it will do. */
+.lx-fold { margin-top: 16px; background: none; }
+.lx-fold > summary { display: inline-flex; justify-content: flex-start; min-height: 48px; padding: 10px 14px 10px 18px;
+  border: 1.5px solid var(--tone, var(--ink)); border-radius: 999px; background: var(--bg); }
+.lx-fold > summary:hover { background: var(--tint); }
+.lx-fold[open] .lx-fold-show, .lx-fold:not([open]) .lx-fold-hide { display: none; }
+.lx-fold > .lx-sources { margin-top: 18px; }
+.lx-fold .lx-ref { padding: 0; }                 /* not Go deeper's padding for its text */
 :root[lang="fa"] .lx-sources { list-style-type: persian; }
 :root[lang="ar"] .lx-sources { list-style-type: arabic-indic; }
 .lx-ref { margin: 0; line-height: 1.5; }
@@ -1780,6 +1824,309 @@ main:focus, .hero-name:focus { outline: none; }
 .page-end .lx-closing { margin: 0 0 14px; max-width: 52em; padding: 12px 16px; border-inline-start: 4px solid var(--page-tone, var(--coral)); border-radius: 0 12px 12px 0;
   background: var(--tint); color: var(--ink); font-weight: 600; }
 [dir="rtl"] .lx-closing { border-radius: 12px 0 0 12px; }
+
+/* ------------------------------------------------------------ Inside an MRI (since version 3.03): its two drawings */
+/* Meet the machine (art_mri.mri_room_svg) needs nothing more than the LINAC room's rules: the same frame, buttons and
+   names (.lx-room-pic, .lx-spot). From a proton to a picture (art_mri.mri_scanner_svg): the scanner beside its steps,
+   as the LINAC's treatment head is (.lx-journey), and like it mirrored on the Persian and Arabic pages, its numbers
+   placed from the page's start edge; the script lights each step's part (.lx-part-art, data-part) and shows what
+   happens in the slice from its step on (.lx-beam-art, data-at), as on the LINAC page. One thing more: a piece the
+   next steps replace (the arrow along the field, once the pulse has tipped it) shows only up to its last step,
+   data-to, read from the step the script sets on the box (.lx-journey[data-step]). Without the script the drawing
+   shows the journey's end: every part, and what stays to the last step. */
+[dir="rtl"] .mri-scan-art { transform: scaleX(-1); }
+.js .mri-scan-art .lx-part-art:not(.is-lit) { opacity: 0.4; }
+.js .mri-scan-art .lx-beam-art:not(.is-on) { opacity: 0; }
+.js .lx-journey[data-step="2"] .mri-scan-art [data-to="1"],
+.js .lx-journey[data-step="3"] .mri-scan-art :is([data-to="1"], [data-to="2"]),
+.js .lx-journey[data-step="4"] .mri-scan-art :is([data-to="1"], [data-to="2"], [data-to="3"]),
+.js .lx-journey[data-step="5"] .mri-scan-art :is([data-to="1"], [data-to="2"], [data-to="3"], [data-to="4"]),
+.js .lx-journey[data-step="6"] .mri-scan-art :is([data-to="1"], [data-to="2"], [data-to="3"], [data-to="4"], [data-to="5"]),
+.js .lx-journey[data-step="7"] .mri-scan-art :is([data-to="1"], [data-to="2"], [data-to="3"], [data-to="4"], [data-to="5"], [data-to="6"]) {
+  opacity: 0;
+}
+.no-js .mri-scan-art [data-to] { display: none; }
+
+/* ------------------------------------------------------------ Inside an MRI: the three games (since version 3.03) */
+/* Parts 4, 5 and 7 of Inside an MRI (learn/devices/mri/): Pick a slice, Many pictures, one exam, and Safety by design,
+   in the manner of Inside a LINAC's parts (lx-*, above), whose classes they share where they are the same thing (the
+   4:3 frame of the drawings, the sub-boxes, the note, the labels). The page's colour is its group's (--tone); the
+   drawings are dark slides, the same in both themes, and what sits over them keeps their colours, with the gold
+   keyboard ring of the slides; the label marks are printed marks, also the same in both themes. Nothing is mirrored
+   in the drawings, nor in the slider, the little scale and the bands, which keep their order on every page (dir="ltr"
+   in the page); the rest follows the page's direction. Every state the script starts in is set here from the first
+   moment (.js), so nothing moves when it arrives; without it each part shows all it says. With reduced motion nothing
+   glides and the knocking stays still (the rule at the end of this file stops every transition and animation). */
+
+/* Boxes: on a white band, the page's ground; on the ground, white (as the LINAC's boxes). */
+.mx-box { border-radius: 20px; background: var(--paper); }
+.band-paper .mx-box { background: var(--bg); }
+.mx-how { margin: 0 0 12px; font-family: var(--font-ui); font-size: 15px; font-weight: 700; }
+.mx-warm h3, .mx-fluid h3, .mx-loud h3, .mx-zones h3 {
+  margin: 0; font-family: var(--font-h3); font-weight: var(--w-h3); font-size: clamp(21px, 0.8vw + 16px, 25px); line-height: var(--lh-h3);
+}
+/* The frames: the LINAC's 4:3 frame (lx-frame), its drawing and anything under it in one column. */
+.mx-frame { flex-direction: column; }
+.mx-frame > .mx-stage { width: 100%; }
+.mx-stage .lx-pic { width: 100%; }
+
+/* The gradient's switch: a pill with a small switch in it, and its state after its name ("Gradient: off"). On, the
+   switch fills with the page's colour; in right-to-left pages it slides the other way. */
+.mx-switch { gap: 10px; padding-inline-start: 14px; }
+.mx-knob { position: relative; flex: none; width: 34px; height: 20px; border: 1.5px solid currentColor; border-radius: 10px; }
+.mx-knob::after {
+  content: ''; position: absolute; top: 2.5px; inset-inline-start: 2.5px; width: 12px; height: 12px; border-radius: 50%;
+  background: currentColor; transition: inset-inline-start 0.18s ease;
+}
+.mx-switch[aria-checked="true"] .mx-knob { border-color: var(--tone-chip); background: var(--tone-chip); }
+.mx-switch[aria-checked="true"] .mx-knob::after { inset-inline-start: 16.5px; background: var(--tone-chip-fg); }
+.mx-state { font-weight: 700; }
+
+/* ------------------------------------------------------------ 4. Pick a slice */
+/* The warm-up: a box with the slider and its stops, the four readouts, and the little scale of frequencies (0 to 320
+   MHz, left to right on every page) where hydrogen's mark (a dot in magenta) moves against the FM band (hatched gold);
+   the readouts carry the same two keys. Side by side on computers: the slider over the scale, the readouts beside. */
+.mx-warm { margin-top: 32px; padding: clamp(20px, 3vw, 32px); }
+.mx-warm .mx-how { margin: 8px 0 0; }
+.mx-tuner { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px 44px; margin-top: 18px; align-items: center; }
+@media (min-width: 900px) {
+  .mx-tuner { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); grid-template-areas: "dial read" "scale read"; }
+  .mx-dial { grid-area: dial; }
+  .mx-readouts { grid-area: read; }
+  .mx-scale { grid-area: scale; }
+  .no-js .mx-tuner { grid-template-areas: "scale read"; }      /* without the script, no slider: the scale beside the readouts */
+}
+.mx-dial { position: relative; padding-bottom: 24px; }
+.mx-range { display: block; width: 100%; height: 44px; margin: 0; accent-color: var(--tone); cursor: pointer; }
+.mx-stops { position: absolute; inset: auto 0 0; height: 22px; margin: 0; padding: 0; list-style: none;
+  font-family: var(--font-ui); font-size: 13px; line-height: 1.6; color: var(--muted); }
+.mx-stops li { position: absolute; top: 0; left: calc(8px + (100% - 16px) * var(--at)); translate: -50% 0; white-space: nowrap; }
+.mx-stops li:first-child { left: 0; translate: 0 0; }
+.mx-stops li:last-child { left: auto; right: 0; translate: 0 0; }
+.mx-stops li.is-current { color: var(--ink); font-weight: 700; }
+.mx-readouts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+.mx-readouts li { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--bg); line-height: 1.5; }
+.band-paper .mx-readouts li { background: var(--paper); }
+.mx-readouts strong { font-size: 1.12em; }
+.mx-key { flex: none; display: block; margin-top: 0.3em; }
+.mx-key-h { width: 14px; height: 14px; border-radius: 50%; background: var(--magenta); box-shadow: 0 0 0 3px var(--magenta-soft); }
+.mx-key-fm, .mx-scale-fm { background: repeating-linear-gradient(45deg, var(--gold) 0 2.5px, transparent 2.5px 6px); border: 1.5px solid var(--gold-text); }
+.mx-key-fm { width: 22px; height: 14px; border-radius: 4px; }
+.mx-scale { padding-top: 6px; }
+.mx-scale-bar { position: relative; height: 34px; border-bottom: 2px solid var(--ink); }
+.mx-scale-fm { position: absolute; bottom: 0; height: 26px; border-bottom: 0; border-radius: 6px 6px 0 0; }
+.mx-scale-h { position: absolute; bottom: -8px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--magenta);
+  box-shadow: 0 0 0 3px var(--magenta-soft); transition: left 0.35s ease; }
+.mx-scale-h::before { content: ''; position: absolute; left: 6px; bottom: 12px; width: 2px; height: 26px; border-radius: 1px; background: var(--magenta); }
+.mx-scale-ticks { position: relative; height: 20px; margin: 8px 0 0; padding: 0; list-style: none; font-family: var(--font-ui); font-size: 13px; line-height: 1.5; color: var(--muted); }
+.mx-scale-ticks li { position: absolute; top: 0; translate: -50% 0; }
+.mx-scale-ticks li:first-child { translate: 0 0; }
+.mx-scale-ticks li::before { content: ''; position: absolute; left: 50%; top: -12px; width: 1.5px; height: 6px; background: var(--ink); }
+.mx-scale-ticks li:first-child::before { left: 0; }
+
+/* The game: the body in the scanner beside the switch and the lines (under it on phones), in the LINAC's frame and
+   split. The drawing's states (art_games.mri_slice_svg): off, the field's arrows all alike and the whole body lit; on,
+   the arrows longer toward the head, the coils lit, the slices' edges and numbers, and the bands of frequencies under
+   the body (only then visible and reachable); the slice of the band chosen, wide or narrow. Without the script: on,
+   with the third slice lit. */
+.mx-game { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px 44px; margin-top: clamp(32px, 4vw, 44px); align-items: start; }
+@media (min-width: 900px) { .mx-game { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); } }
+.ms-off, .ms-on, .ms-lines, .ms-lit, .ms-col, .ms-lit-all, .mx-nums { transition: opacity 0.35s ease; }
+.ms-on, .ms-lines, .ms-lit, .ms-col { opacity: 0; }
+.ms-lit-all { opacity: 0.86; }
+.ms-coil { fill: #5B4A93; transition: fill 0.35s ease; }
+.mx-game[data-gradient="on"] .ms-off, .no-js .ms-off { opacity: 0; }
+.mx-game[data-gradient="on"] .ms-on, .mx-game[data-gradient="on"] .ms-lines, .no-js .ms-on, .no-js .ms-lines { opacity: 1; }
+.mx-game[data-gradient="on"] .ms-lit-all, .no-js .ms-lit-all { opacity: 0; }
+.mx-game[data-gradient="on"] .ms-coil, .no-js .ms-coil { fill: #F2BE4E; }
+.mx-game[data-gradient="on"][data-band="1"][data-w="wide"] [data-band="1"][data-w="wide"],
+.mx-game[data-gradient="on"][data-band="2"][data-w="wide"] [data-band="2"][data-w="wide"],
+.mx-game[data-gradient="on"][data-band="3"][data-w="wide"] [data-band="3"][data-w="wide"],
+.mx-game[data-gradient="on"][data-band="4"][data-w="wide"] [data-band="4"][data-w="wide"],
+.mx-game[data-gradient="on"][data-band="5"][data-w="wide"] [data-band="5"][data-w="wide"],
+.mx-game[data-gradient="on"][data-band="1"][data-w="narrow"] [data-band="1"][data-w="narrow"],
+.mx-game[data-gradient="on"][data-band="2"][data-w="narrow"] [data-band="2"][data-w="narrow"],
+.mx-game[data-gradient="on"][data-band="3"][data-w="narrow"] [data-band="3"][data-w="narrow"],
+.mx-game[data-gradient="on"][data-band="4"][data-w="narrow"] [data-band="4"][data-w="narrow"],
+.mx-game[data-gradient="on"][data-band="5"][data-w="narrow"] [data-band="5"][data-w="narrow"],
+.no-js .mx-game [data-band="3"][data-w="wide"] { opacity: 1; }
+/* The slices' numbers, from the feet, under the table; the lit slice's in gold. */
+.mx-nums { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.mx-game[data-gradient="on"] .mx-nums { opacity: 1; }
+.mx-nums span {
+  position: absolute; display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; translate: -50% -50%;
+  border: 1.5px solid rgba(233, 217, 255, 0.6); border-radius: 50%; background: #140B26; color: #EFE8F8;
+  font-family: var(--font-ui); font-size: 12px; font-weight: 700; line-height: 1;
+}
+.mx-game[data-band="1"] .mx-nums span:nth-child(1), .mx-game[data-band="2"] .mx-nums span:nth-child(2),
+.mx-game[data-band="3"] .mx-nums span:nth-child(3), .mx-game[data-band="4"] .mx-nums span:nth-child(4),
+.mx-game[data-band="5"] .mx-nums span:nth-child(5) { border-color: #FFFFFF; background: #F2BE4E; color: #16112A; }
+/* The bands under the body, on a line of frequencies (MHz, rising toward the head as the field does): each a button
+   over its slice, its band named above it while it is chosen, under the pointer or the keyboard. Narrower, each band is
+   the middle half of its place. */
+.mx-ruler { position: relative; height: 70px; margin-top: 2px; }
+.mx-game[data-gradient="off"] .mx-ruler { visibility: hidden; }
+.mx-ruler-line { position: absolute; top: 36px; height: 2px; border-radius: 1px; background: rgba(233, 217, 255, 0.55); }
+.mx-ticks { position: absolute; inset: 0; pointer-events: none; }
+.mx-tick { position: absolute; top: 44px; translate: -50% 0; color: #CFC6E6; font-family: var(--font-ui); font-size: 12px; font-weight: 600; line-height: 1.4; white-space: nowrap; }
+.mx-tick::before { content: ''; position: absolute; left: 50%; top: -9px; width: 1.5px; height: 8px; background: rgba(233, 217, 255, 0.55); }
+.mx-band { position: absolute; top: 2px; height: 32px; margin: 0; padding: 0; border: 0; border-radius: 10px; background: transparent; cursor: pointer; }
+.mx-band-fill {
+  position: absolute; top: 3px; bottom: 3px; left: 3px; right: 3px; border: 1.5px solid rgba(233, 217, 255, 0.6); border-radius: 8px;
+  background: rgba(233, 217, 255, 0.1); transition: left 0.2s ease, right 0.2s ease, background-color 0.2s ease;
+}
+.mx-game[data-w="narrow"] .mx-band-fill { left: 25%; right: 25%; }
+.mx-band:hover .mx-band-fill { border-color: #FFFFFF; background: rgba(233, 217, 255, 0.26); }
+.mx-band[aria-pressed="true"] .mx-band-fill { border-color: #FFFFFF; background: #F2BE4E; }
+.mx-band:focus-visible { outline: 3px solid #E6C36A; outline-offset: 1px; }
+/* (3.03) Hidden, a band's name keeps its light colour too, so that it reads as it will when it shows (on the frame's
+   night), and contrast checks of the page used don't take it for dark text on the night. */
+.mx-band-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; color: #EFE8F8; }
+.mx-band[aria-pressed="true"] .mx-band-name, .mx-band:hover .mx-band-name, .mx-band:focus-visible .mx-band-name {
+  bottom: calc(100% + 4px); left: 50%; translate: -50% 0; z-index: 1; width: max-content; height: auto; overflow: visible; clip-path: none;
+  padding: 2px 9px; border: 1px solid rgba(230, 195, 106, 0.6); border-radius: 10px; background: #140B26; color: #EFE8F8;
+  font-family: var(--font-ui); font-size: 12px; font-weight: 700; line-height: 1.5;
+}
+.mx-band[aria-pressed="true"] .mx-band-name { border-color: #FFFFFF; background: #EFE8F8; color: #140B26; }
+.mx-band:hover .mx-band-name, .mx-band:focus-visible .mx-band-name { z-index: 2; }
+.mx-band:first-of-type .mx-band-name { left: 0; translate: 0 0; }
+.mx-band:last-of-type .mx-band-name { left: auto; right: 0; translate: 0 0; }
+.mx-still { margin: 10px 0 0; }
+.mx-game-top { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.mx-narrow .icon { display: none; width: 18px; height: 18px; }
+.mx-narrow[aria-pressed="true"] { border-color: var(--tone-text); background: var(--tone-soft); }
+.mx-narrow[aria-pressed="true"] .icon { display: block; }
+.mx-status { margin-top: 0; }
+.mx-directions { margin: 16px 0 0; }
+
+/* ------------------------------------------------------------ 5. Many pictures, one exam */
+/* Spot the fluid beside Why is it so loud? (under it on phones). The two pictures side by side, each with its button
+   under it (the site's answers: a tick and teal when right, a cross when not, the right one outlined); without the
+   script, their lines. Why is it so loud?: the scanner and its switch in a box, as the LINAC's door. */
+.mx-exam { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px 48px; margin-top: 32px; align-items: start; }
+@media (min-width: 900px) { .mx-exam { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); } }
+.mx-heads { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.mx-head figure { margin: 0; }
+.mx-head-art { display: block; width: 100%; height: auto; }
+.js .mx-head-pic { cursor: pointer; }
+.mx-head figcaption { margin-top: 10px; font-size: 15px; }
+.mx-pick { width: 100%; justify-content: center; text-align: center; }
+.mx-fluid-after { margin-top: 14px; }
+.mx-knock { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 22px; margin: 14px 0 16px; padding: 16px; }
+.mx-knock-art { display: block; flex: none; width: 200px; max-width: 100%; height: auto; }
+.mx-knock-side { flex: 1 1 200px; min-width: 0; }
+.mx-loud-text { margin: 0; }
+.mk-coil circle { stroke: #5B4A93; transition: stroke 0.25s ease; }
+.mx-loud[data-gradient="on"] .mk-coil circle { stroke: #F2BE4E; }
+.mk-knocks { opacity: 0; transition: opacity 0.25s ease; }
+.mx-loud[data-gradient="on"] .mk-knocks { opacity: 1; }
+/* While the gradient is on, the scanner knocks, about two and a half times a second, and the knocks spread round it
+   (slower than three flashes a second); with reduced motion it stays still, its knocks drawn round it. */
+@media (prefers-reduced-motion: no-preference) {
+  .mx-loud[data-gradient="on"] .mk-scanner { animation: mx-knock 0.4s steps(1, end) infinite; }
+  .mx-loud[data-gradient="on"] .mk-knock { animation: mx-knock-out 0.8s ease-out infinite; }
+  .mx-loud[data-gradient="on"] .mk-knock[data-k="1"] { animation-delay: 0.1s; }
+  .mx-loud[data-gradient="on"] .mk-knock[data-k="2"] { animation-delay: 0.2s; }
+}
+@keyframes mx-knock { 0% { transform: translate(0, 0); } 25% { transform: translate(-1.6px, 0.6px); } 50% { transform: translate(1.4px, -0.6px); } 75% { transform: translate(-0.8px, 0); } }
+@keyframes mx-knock-out { 0% { opacity: 0.15; } 30% { opacity: 1; } 100% { opacity: 0.1; } }
+
+/* ------------------------------------------------------------ 7. Safety by design */
+/* Four zones, one door: the plan beside the staff's questions, the seven and their answers (under it on phones). The
+   zones' list under the plan, each zone with its ring's colours as its key. Each of the seven a button with its small
+   picture (the first letter of its name a capital, in English); tried, it keeps the quizzes' tick (in) or cross (out).
+   The answer in a box, teal for in, coral for out; without the script, every answer in a list. */
+.mx-zones { margin-top: 32px; }
+.mx-zones-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px 44px; margin-top: 20px; align-items: start; }
+@media (min-width: 900px) { .mx-zones-grid { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); } }
+.mx-zones-art { display: block; width: 100%; height: auto; }
+.mx-zone-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; font-size: 15px; }
+.mx-zone-list li { display: flex; align-items: flex-start; gap: 10px; }
+.mx-zkey { flex: none; width: 24px; height: 16px; margin-top: 0.3em; border: 2.5px solid; border-radius: 5px; }
+.mx-zkey-1 { border-color: #B9A6EE; background: #2B2254; }
+.mx-zkey-2 { border-color: #5FD6CC; background: #14434A; }
+.mx-zkey-3 { border-color: #F2BE4E; background: #4A3B17; }
+.mx-zkey-4 { border-color: #FF7A64; background: #55242F; }
+.mx-asks { padding: 16px 20px 18px; }
+.mx-asks h4 { margin: 0; font-family: var(--font-ui); font-size: 16px; font-weight: 700; line-height: 1.4; }
+.mx-asks ol { margin: 8px 0 0; padding-inline-start: 22px; }
+.mx-asks li + li { margin-top: 4px; }
+:root[lang="fa"] .mx-asks ol { list-style-type: persian; }
+:root[lang="ar"] .mx-asks ol { list-style-type: arabic-indic; }
+.mx-items { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.mx-item {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 6px 16px; padding-inline-start: 10px;
+  border: 1.5px solid var(--ink); border-radius: 23px; background: transparent; color: var(--ink); cursor: pointer;
+  font-family: var(--font-ui); font-size: 15px; font-weight: 700; line-height: 1.35; text-align: start;
+}
+.mx-item:hover { background: var(--tint); }
+.mx-item .mz-icon, .mx-verdict .mz-icon { flex: none; }
+.mx-item .choice-mark { display: none; }
+.mx-item[data-state="in"] { border-color: var(--teal-chip); background: var(--teal-soft); }
+.mx-item[data-state="out"] { border-color: var(--coral); background: var(--coral-soft); }
+.mx-item[data-state="in"] .mark-right { display: inline-flex; color: var(--teal-text); }
+.mx-item[data-state="out"] .mark-wrong { display: inline-flex; color: var(--coral-text); }
+.mx-item-name { display: inline-block; }
+:root[lang="en"] .mx-item-name::first-letter { text-transform: uppercase; }
+.mx-verdicts { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 10px; }
+.js .mx-verdicts:not(.is-shown), .js .mx-verdict:not(.is-current) { display: none; }
+.mx-verdict { padding: 14px 16px 16px; border-radius: 16px; background: var(--paper); }
+.band-paper .mx-verdict { background: var(--bg); }
+.js .mx-verdicts[data-result="in"] .mx-verdict { background: var(--teal-soft); }
+.js .mx-verdicts[data-result="out"] .mx-verdict { background: var(--coral-soft); }
+.mx-verdict h4 { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--font-ui); font-size: 16px; font-weight: 700; line-height: 1.4; }
+.mx-verdict p { margin: 8px 0 0; }
+.mx-badge { min-height: 26px; margin-inline-end: 6px; padding: 0 10px; white-space: nowrap; vertical-align: 1px; line-height: 1.4; }
+.mx-badge-in { border-color: var(--teal-text); color: var(--teal-text); }
+.mx-badge-out { border-color: var(--coral-text); color: var(--coral-text); }
+.mx-again { margin: 14px 0 0; }
+/* The tokens on the plan: where each ends without the script, where each waits with it (the script then moves them);
+   their marks; the door, swinging open as a token goes in. */
+.mz-token { transform: var(--end); transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.3, 1); }
+.js .mz-token { transform: var(--home); }
+.mz-mark { display: none; }
+.no-js .mz-token[data-end="in"] .mz-mark-in, .no-js .mz-token[data-end="out"] .mz-mark-out,
+.js .mz-token[data-state="in"] .mz-mark-in, .js .mz-token[data-state="out"] .mz-mark-out { display: inline; }
+.mz-door { transform-box: view-box; transform-origin: 263px 260px; transition: transform 0.3s ease; }
+.mz-door.is-open { transform: rotate(-78deg); }
+/* The lesson, as a key line: a rule in the page's colour where reading starts, as "About this page". */
+.mx-lesson { margin: 28px 0 0; max-width: 52em; padding: 14px 18px; border-inline-start: 4px solid var(--tone); border-radius: 0 12px 12px 0;
+  background: var(--tint); font-weight: 600; }
+[dir="rtl"] .mx-lesson { border-radius: 12px 0 0 12px; }
+/* Three labels: a card for each, its mark beside its words (the name in English, in the Latin type); then "No label?",
+   a warning as the LINAC's never to enter a treatment room. */
+.mx-labels { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.mx-label { display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px 20px; }
+.mx-label-art { display: block; flex: none; width: 72px; height: 72px; }
+.mx-label-arts { display: flex; flex: none; flex-direction: column; gap: 8px; }   /* MR Safe: its two forms (since 9 November 2026) */
+.mx-label p { margin: 0; }
+.mx-label-name { font-family: var(--font-latin); }
+.mx-nolabel { display: flex; align-items: flex-start; gap: 10px; margin: 20px 0 0; max-width: 52em; font-weight: 700; color: var(--coral-text); }
+.mx-nolabel .icon { width: 22px; height: 22px; margin-top: 0.15em; }
+/* Four hazards, as the LINAC's three principles, in the page's colour; the box about a collapse, as the LINAC's card
+   about Iran, its top in coral; What went wrong?: a card for each case, its place, year and field on top. */
+.mx-hazards, .mx-cases { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 14px; }
+/* (Ali, 9 November 2026) the four hazards two by two, never three and one: a column is at least half the row wide
+   (and 400 pixels), so they stand in two columns, or one under another on narrower screens. */
+.mx-hazards { grid-template-columns: repeat(auto-fit, minmax(min(100%, max(400px, calc(50% - 7px))), 1fr)); }
+.mx-cases { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.mx-hazard { padding: 20px 22px 22px; border-top: 6px solid var(--tone); }
+.mx-hazard h4 { margin: 0; font-family: var(--font-h3); font-size: 22px; font-weight: var(--w-h3); line-height: var(--lh-h3); }
+.mx-hazard p { margin: 8px 0 0; }
+.mx-collapse { padding: clamp(20px, 3vw, 30px); border: 0; border-radius: 24px; border-top: 6px solid var(--coral); background: var(--paper); }
+.band-paper .mx-collapse { background: var(--bg); }
+.mx-collapse p { margin: 12px 0 0; max-width: 52em; }
+.mx-case { overflow: hidden; }
+.mx-case h4 { margin: 0; padding: 16px 20px 12px; background: var(--tone-soft); font-family: var(--font-ui); font-size: 17px; font-weight: 700; line-height: 1.35; }
+.mx-case p { margin: 0; padding: 14px 20px 20px; }
+/* The cases' titles in three rows (Ali's idea, 9 November 2026), so the three line up: the part of the scanner, the
+   place, the date. */
+.mx-case-part, .mx-case-where, .mx-case-when { display: block; }
+.mx-case-part { font-size: 18px; }
+.mx-case-where { margin-top: 4px; font-size: 15px; font-weight: 600; }
+.mx-case-when { font-size: 15px; font-weight: 400; }
+.mx-case-part::first-letter, .mx-case-when::first-letter { text-transform: uppercase; }   /* "the magnet", "reported 2017" */
+.mx-closing { margin: 20px 0 0; max-width: 52em; font-weight: 600; }
 
 /* ------------------------------------------------------------ the stories behind the pictures (since version 3.00) */
 /* Ali's ideas (28 and 30 October 2026): an easter egg. Each animated picture keeps all its stories, and each visit

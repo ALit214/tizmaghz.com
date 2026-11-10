@@ -3,7 +3,7 @@
    canvas names it: data-art): Books & Guidelines a shelf, Standards in Medicine (since version 3.00) a seal, and
    since version 3.01 Inside Medical Devices a look inside a medical device (a heartbeat on its screen and a
    magnifying glass), Inside a LINAC the machine from the side, Accessibility the accessibility sign, and the Site Map
-   a pin landing on a map; see each one below.
+   a pin landing on a map; since version 3.03 Inside an MRI the scanner from the side; see each one below.
 
    Books & Guidelines (Ali's choice, 27 October 2026, the second of three ideas he compared; the others are
    kept in the project's archive and in artifacts\books-pictures): a shelf appears in the dish, and one pale
@@ -762,6 +762,244 @@
     return { duration: 5.0, frame: frame };
   }
 
+  // ---------------------------------------------------------------- Inside an MRI: from the side
+  // (since version 3.03; Ali's choice of 9 November 2026: design 2d of the review page "Inside an MRI Pictures", after
+  // designs 2, 2b and 2c) One of the device pictures, drawn as Inside a LINAC is, in the page's colour (its group's:
+  // coral, Medical imaging being the second group of Inside Medical Devices). The scanner from the side, seen close: its
+  // housing, one rounded body standing on the floor, with the tunnel (the bore) through it, softly lit inside, as we
+  // would see it with the near side of the housing taken away; in each half of the housing, above and below the tunnel,
+  // a row of four faint blocks, the magnet's coils, as in a cut-away, each row in the middle of its half. The table in
+  // front, its top running into the tunnel, and the patient lying on it, head first, drawn only as an outline of pale
+  // cells with a faint fill, the legs a little over half as thick as the trunk. Five cells, one in each colour (the
+  // protons of the story, the body's own), in a row along the trunk, each a little top on a small dark disc: a rim
+  // round it and an axis through it, its tip a small white cell, pointing every which way. On the chest, the coil of the
+  // scan, one thin gold line; the field's direction, one short arrow at the tunnel's mouth, towards the table. In the
+  // magnet's field the five lean the same way, along the tunnel, and start to spin like tops, all to the same beat: each
+  // axis turns round the field, and a mark on each rim shows it spinning. One gentle radio pulse: the tunnel's lining
+  // lights and a soft band of light comes down from it; the five tip over to one side and keep turning, and as they turn
+  // they sing back softly, faint arcs in their colours rising to the coil on the chest, which lights in each colour as
+  // it catches them. Then they lean back along the field and slow to rest, all leaning the same way, ready for the next
+  // visitor (still, as every picture ends). The physics is part 3's: the field runs along the tunnel, the axes only lean
+  // along it, turn round it at one rate, are tipped by a pulse in time with that rate and send back a faint signal. On
+  // the Persian and Arabic pages the scanner stands on the right, and the five lean towards the end of the line there
+  // too.
+  function scanner(ctx, dir) {
+    var F = family(ctx, dir, 'coral'), rnd = seeded(53), X = F.X;
+    var places = [];
+    // the housing, one rounded body standing on the floor, with the tunnel (the bore) through it from X0 to X1, between
+    // BT and BB: its cells go round its outline from the floor up and curl into the tunnel at its mouths; its faces lean
+    // out a little towards the mouths (FLARE), as a scanner's covers do round the opening
+    var X0 = 78, X1 = 372, TOP = 86, BT = 188, BB = 372, LIP = 28, FLARE = 10, ROUND = 84;
+    var LOWER = F.flip(outline([[X0 + FLARE, F.FLOOR], [X0, BB, LIP], [X1, BB, LIP], [X1 - FLARE, F.FLOOR]], false));
+    var UPPER = F.flip(outline([[X0, BT, LIP], [X0 + FLARE, TOP, ROUND], [X1 - FLARE, TOP, ROUND], [X1, BT, LIP]], true));
+    var BODY = F.flip(outline([[X0 + FLARE, F.FLOOR], [X0, BB], [X0, BT], [X0 + FLARE, TOP, ROUND], [X1 - FLARE, TOP, ROUND], [X1, BT],
+                               [X1, BB], [X1 - FLARE, F.FLOOR]], true));
+    var below = { rnd: rnd, from: 1.4, span: 0.25, r: 6.2, kind: 'housing' };
+    F.beads(places, F.flip(outline([[X0 + FLARE, F.FLOOR], [X0, BB, LIP], [X0 + LIP, BB]], false)), 16.5, below);
+    F.beads(places, F.flip(outline([[X1 - FLARE, F.FLOOR], [X1, BB, LIP], [X1 - LIP, BB]], false)), 16.5, below);
+    F.beads(places, F.flip(outline([[X0 + LIP, BT], [X0, BT, LIP], [X0 + FLARE, TOP, ROUND], [X1 - FLARE, TOP, ROUND], [X1, BT, LIP],
+                                    [X1 - LIP, BT]], false)), 16.5, { rnd: rnd, from: 1.6, span: 0.55, r: 6.2, kind: 'housing' });
+    // the magnet's coils, faintly seen in the housing (no cells: a hint of what is inside): in each half, above and
+    // below the tunnel, a row of four, the row in the middle of its half, across and up and down: above, between the
+    // inner edge of the cells along the top (TOP + 6) and the tunnel's lining; below, between the lining and the floor
+    var COILS = [], CW = 48, CG = 16, CX = (X0 + X1) / 2 - (4 * CW + 3 * CG) / 2;
+    [[(TOP + 6 + BT) / 2, 24], [(BB + F.FLOOR) / 2, 21]].forEach(function (row) {
+      for (var c = 0; c < 4; c++) {
+        var cx0 = CX + c * (CW + CG), y0 = row[0] - row[1], y1 = row[0] + row[1];
+        COILS.push(F.flip(outline([[cx0, y0, 6], [cx0 + CW, y0, 6], [cx0 + CW, y1, 6], [cx0, y1, 6]], true)));
+      }
+    });
+    // the table: its top, running into the tunnel, and its column outside it
+    var PLANK = F.flip(outline([[104, 334, 6], [540, 334, 6], [540, 347, 6], [104, 347, 6]], true));
+    var COLUMN = F.flip(outline([[468, 347], [500, 347], [500, F.FLOOR], [468, F.FLOOR]], true));
+    var FOOT = F.flip(outline([[444, 463, 3], [524, 463, 3], [524, F.FLOOR], [444, F.FLOOR]], true));
+    F.beads(places, F.flip([[484, 458], [484, 358]]), 16, { rnd: rnd, from: 1.5, span: 0.2, r: 5.8, kind: 'couch' });
+    F.beads(places, F.flip([[112, 340.5], [532, 340.5]]), 16.5, { rnd: rnd, from: 1.7, span: 0.3, r: 5.8, kind: 'couch' });
+    // the patient lying on it, head first into the tunnel: only the body's outline, in pale cells, with a faint fill;
+    // the legs 23 units thick, the trunk 41, sloping down from the hip
+    var SKIN = F.flip(arcLine(140, 312, 19, 0.6, TAU - 0.6).concat(outline([[158, 302], [166, 292, 6], [332, 292, 12],
+      [356, 310, 8], [426, 310, 4], [430, 288, 5], [446, 288, 5], [446, 333], [158, 333], [158, 322]], false)));
+    F.beads(places, SKIN, 11.5, { rnd: rnd, from: 1.85, span: 0.3, r: 4, color: F.PALE, kind: 'body' });   // its outline only
+    // the coil of the scan on the chest: a thin gold bow lying over the trunk (a line, no cells)
+    var CHEST = F.flip(outline([[176, 296], [184, 279, 14], [312, 279, 14], [320, 296]], false));
+    // the five, one in each colour, in a row inside the trunk: the body's own protons
+    var TOPY = 311, TOPS = [];
+    for (var k = 0; k < 5; k++) {
+      places.push({ x: X(184 + 34 * k), y: TOPY, r: 9, color: F.TONES[k], arrive: 2.2 + 0.05 * k, late: true, kind: 'top', k: k });
+      TOPS.push({ th: 1.1 + 1.7 * rnd(), off: TAU * rnd() });
+    }
+    var cells = colony(places, { seed: 33, r0: 6.5, step: 0.16 });
+
+    // How they turn (al: along the field, towards the table; up; out towards us), drawn a little from above
+    var LEAN = 0.6, L = 23, TAIL = 9, RIM = 14, KX = -0.34, KY = 0.26;
+    var W = TAU * 2.0;
+    function speed(t) { return ease(clamp01((t - 2.45) / 0.6)) * (1 - ease(clamp01((t - 4.3) / 0.7))); }
+    var TURN = [0];
+    for (var s = 1; s <= 500; s++) TURN.push(TURN[s - 1] + W * speed((s - 0.5) / 100) / 100);
+    var REST = 0.35 - TURN[500];
+    function turned(t) {
+      var i = Math.min(499, Math.floor(t * 100)), f = t * 100 - i;
+      return REST + TURN[i] + (TURN[i + 1] - TURN[i]) * f;
+    }
+    function leaning(t) { return ease(clamp01((t - 2.45) / 0.55)); }
+    function tipped(t) { return ease(clamp01((t - 3.3) / 0.32)) * (1 - ease(clamp01((t - 4.15) / 0.65))); }
+    function pose(k, t) {
+      var p = TOPS[k], e = leaning(t), ph = turned(t) + (1 - e) * p.off;
+      var th = p.th + (LEAN - p.th) * e + (Math.PI / 2 - LEAN) * tipped(t);
+      return { th: th, al: Math.cos(th), up: Math.sin(th) * Math.cos(ph), out: Math.sin(th) * Math.sin(ph) };
+    }
+    function at(c, v, d) { return { x: c.x + dir * (v.al + KX * v.out) * d, y: c.y - (v.up - KY * v.out) * d }; }
+    function cross(p, q) { return { al: p.up * q.out - p.out * q.up, up: p.out * q.al - p.al * q.out, out: p.al * q.up - p.up * q.al }; }
+    function unit(p) { var n = Math.hypot(p.al, p.up, p.out) || 1; return { al: p.al / n, up: p.up / n, out: p.out / n }; }
+    function rim(c, a, spun) {
+      var u = unit(cross(a, { al: 1, up: 0, out: 0 })), v = cross(a, u), pts = [];
+      for (var s = 0; s <= 36; s++) {
+        var g = TAU * s / 36 + spun, cg = Math.cos(g), sg = Math.sin(g);
+        var w = { al: u.al * cg + v.al * sg, up: u.up * cg + v.up * sg, out: u.out * cg + v.out * sg }, p = at(c, w, RIM);
+        p.near = w.out; pts.push(p);
+      }
+      return pts;
+    }
+    function half(pts, near, color, a, width) {
+      ctx.strokeStyle = rgba(color, a); ctx.lineWidth = width; ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (var s = 1; s < pts.length; s++) {
+        if ((pts[s].near + pts[s - 1].near > 0) !== near) continue;
+        ctx.moveTo(pts[s - 1].x, pts[s - 1].y); ctx.lineTo(pts[s].x, pts[s].y);
+      }
+      ctx.stroke();
+    }
+    function axis(c, q, a) {
+      ctx.strokeStyle = 'rgba(255,255,255,' + 0.8 * a + ')'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+    }
+    function topAt(l, t) {
+      var show = clamp01((t - l.target.arrive) / 0.3);
+      if (show <= 0) { cell(ctx, l.x, l.y, l.r, l.color, l.alpha); return; }
+      var a = pose(l.target.k, t), ring = rim(l, a, 2.5 * turned(t)), mark = ring[0], tip = at(l, a, L), tail = at(l, a, -TAIL);
+      var edge = mix(l.color, F.WHITE, 0.45);
+      ctx.fillStyle = 'rgba(12,6,24,' + 0.55 * show + ')';
+      ctx.beginPath(); ctx.arc(l.x, l.y, RIM + 2, 0, TAU); ctx.fill();
+      F.trace(ring, true);
+      ctx.fillStyle = rgba(l.color, 0.2 * show); ctx.fill();
+      half(ring, false, edge, 0.4 * show, 1.2);
+      if (mark.near < 0) cell(ctx, mark.x, mark.y, 2.6, F.WHITE, 0.6 * show);
+      if (a.out < 0) { axis(l, tip, show); cell(ctx, tip.x, tip.y, 3.4, F.WHITE, show); } else axis(l, tail, show);
+      cell(ctx, l.x, l.y, l.r, l.color, l.alpha);
+      if (a.out >= 0) { axis(l, tip, show); cell(ctx, tip.x, tip.y, 3.4, F.WHITE, show); } else axis(l, tail, show);
+      half(ring, true, edge, 0.85 * show, 1.6);
+      if (mark.near >= 0) cell(ctx, mark.x, mark.y, 2.6, F.WHITE, show);
+    }
+    // the pulse, from the lining, and the song: arcs rising from each of the five to the coil on the chest
+    var PULSE = 3.16, SONG = [3.6, 3.84, 4.08], RISE = 0.8;
+    function pulse(t) { return clamp01((t - PULSE) / 0.12) * (1 - clamp01((t - PULSE - 0.12) / 0.5)); }
+    function tap(t) { return clamp01((t - PULSE - 0.1) / 0.06) * (1 - clamp01((t - PULSE - 0.16) / 0.3)); }
+    function shine(x, y, r, color, a) {
+      var g = ctx.createRadialGradient(x, y, 2, x, y, r);
+      g.addColorStop(0, rgba(color, Math.min(1, a)));
+      g.addColorStop(1, rgba(color, 0));
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    }
+    function song(t) {
+      var reach = (TOPY - 281 - 12) / 34;                     // how far up an arc has risen when it meets the coil
+      cells.cells.forEach(function (c) {
+        if (c.target.kind !== 'top') return;
+        var x = c.target.x, color = c.target.color;
+        SONG.forEach(function (t0) {
+          var q = (t - t0) / RISE;
+          if (q <= 0 || q >= 1) return;
+          ctx.strokeStyle = rgba(color, 0.75 * Math.sin(Math.PI * q)); ctx.lineWidth = 2.2;
+          ctx.beginPath(); ctx.arc(x, TOPY, 12 + 34 * q, -Math.PI / 2 - 0.6, -Math.PI / 2 + 0.6); ctx.stroke();
+          var caught = 1 - Math.min(1, Math.abs(q - reach) / 0.25);
+          if (caught > 0) shine(x, 281, 20, color, 0.55 * caught);
+        });
+      });
+    }
+    var LEFT = Math.min(X(X0), X(X1)), WIDE = Math.abs(X(X1) - X(X0)), FIT = 0.88;
+    function frame(t) {
+      ctx.save();
+      draw(Math.max(0, Math.min(5, t)));
+      ctx.restore();
+    }
+    function draw(t) {
+      ctx.clearRect(0, 0, SIZE, SIZE);
+      F.ground(t);
+      // (Ali, 9 November 2026: the housing touched the dish's round border) the scanner drawn a little smaller (FIT),
+      // standing on the same floor, the middle of the dish where it was
+      ctx.save();
+      ctx.translate(300, F.FLOOR); ctx.scale(FIT, FIT); ctx.translate(-300, -F.FLOOR);
+      var a1 = clamp01((t - 2.0) / 0.5), looks = cells.draw(ctx, t), lit = pulse(t);
+      F.part(BODY, a1, { solid: 0.7, fill: 0.14, edge: 0 });
+      COILS.forEach(function (c) { F.part(c, a1 * 0.7, { fill: 0.08, edge: 0.18, width: 1 }); });
+      if (a1 > 0) {                                          // the tunnel, lit softly from above
+        var g = ctx.createLinearGradient(0, BT, 0, BB);
+        g.addColorStop(0, 'rgba(255,214,200,' + 0.05 * a1 + ')');
+        g.addColorStop(0.35, 'rgba(255,214,200,' + 0.12 * a1 + ')');
+        g.addColorStop(1, 'rgba(255,214,200,' + 0.03 * a1 + ')');
+        ctx.fillStyle = g;
+        ctx.fillRect(LEFT, BT, WIDE, BB - BT);
+      }
+      F.part(LOWER, a1, { fill: 0, edge: 0.5, open: true });
+      F.part(UPPER, a1, { fill: 0, edge: 0.5 });
+      if (lit > 0) {
+        ctx.strokeStyle = 'rgba(255,255,255,' + 0.8 * lit + ')'; ctx.lineWidth = 2.4;
+        [BT, BB].forEach(function (y) { ctx.beginPath(); ctx.moveTo(X(X0 + LIP), y); ctx.lineTo(X(X1 - LIP), y); ctx.stroke(); });
+      }
+      F.draw(looks, ['housing']);
+      F.part(FOOT, a1, { solid: 0.8, fill: 0.12, edge: 0.4 });
+      F.part(COLUMN, a1, { solid: 0.8, fill: 0.12, edge: 0.4 });
+      F.part(PLANK, a1, { solid: 0.8, fill: 0.16, edge: 0.55 });
+      F.draw(looks, ['couch']);
+      if (a1 > 0) {
+        F.trace(SKIN, false);
+        ctx.strokeStyle = 'rgba(239,232,248,' + 0.5 * a1 + ')'; ctx.lineWidth = 1.4; ctx.stroke();
+      }
+      if (a1 > 0) {                                          // the body's faint fill, inside its outline
+        F.trace(SKIN, true); ctx.fillStyle = 'rgba(239,232,248,' + 0.07 * a1 + ')'; ctx.fill();
+      }
+      F.draw(looks, ['body'], null, F.PATIENT);
+      if (a1 > 0) { F.trace(CHEST, false); ctx.strokeStyle = rgba(rgb(COLORS.gold), 0.75 * a1); ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.stroke(); }
+      if (lit > 0) {                                         // the pulse: a soft light, and a wave coming down from the lining
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        var w = ctx.createLinearGradient(0, BT, 0, BB);
+        w.addColorStop(0, 'rgba(255,255,255,' + 0.16 * lit + ')');
+        w.addColorStop(0.5, 'rgba(255,255,255,' + 0.03 * lit + ')');
+        w.addColorStop(1, 'rgba(255,255,255,' + 0.12 * lit + ')');
+        ctx.fillStyle = w;
+        ctx.fillRect(LEFT, BT, WIDE, BB - BT);
+        var d = ease(clamp01((t - PULSE) / 0.32)), yy = BT + 6 + (TOPY - BT - 26) * d;   // a soft band of light, coming down
+        var band = ctx.createLinearGradient(0, yy - 18, 0, yy + 18);
+        band.addColorStop(0, 'rgba(255,255,255,0)');
+        band.addColorStop(0.5, 'rgba(255,255,255,' + 0.22 * lit + ')');
+        band.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = band;
+        ctx.fillRect(LEFT + LIP, yy - 18, WIDE - 2 * LIP, 36);
+        ctx.restore();
+      }
+      if (a1 > 0) {                                          // the field's direction: one short arrow at the tunnel's mouth
+        ctx.save();
+        var FY = BT + 36, x0 = X(X1 - 92), x1 = X(X1 - 30);
+        ctx.setLineDash([3, 7]);
+        ctx.strokeStyle = 'rgba(255,255,255,' + 0.32 * a1 + ')'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(x0, FY); ctx.lineTo(x1, FY); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(x1 - dir * 9, FY - 5); ctx.lineTo(x1, FY); ctx.lineTo(x1 - dir * 9, FY + 5); ctx.stroke();
+        ctx.restore();
+      }
+      looks.forEach(function (l) { if (l.target.kind === 'top') topAt(l, t); });
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      var f = tap(t);
+      if (f > 0) cells.cells.forEach(function (c) { if (c.target.kind === 'top') F.glow(c.target.x, TOPY, 16, 0.3 * f); });
+      song(t);
+      ctx.restore();
+      ctx.restore();
+    }
+    return { duration: 5.0, frame: frame };
+  }
+
   // ---------------------------------------------------------------- Accessibility: the accessibility sign
   // (since version 3.01; Ali's idea, 2 November 2026: the sign people know for accessibility, drawn in cells like the
   // seal of Standards in Medicine): a ring of cells in the site's five colours, mixed together, that closes round the
@@ -932,9 +1170,11 @@
   kit.seal = seal;
   kit.devices = lookInside;
   kit.side = side;
+  kit.scanner = scanner;
   kit.sign = sign;
   kit.pin = youAreHere;
-  var ART = { reading: shelf, standards: seal, devices: lookInside, linac: side, accessibility: sign, sitemap: youAreHere };
+  var ART = { reading: shelf, standards: seal, devices: lookInside, linac: side, mri: scanner, accessibility: sign,
+              sitemap: youAreHere };
   var ideas = window.pageArtIdeas || {};          // review copies can bring other pictures (see their page)
   Object.keys(ideas).forEach(function (k) { ART[k] = function (ctx, dir) { return ideas[k](ctx, dir, kit); }; });
 

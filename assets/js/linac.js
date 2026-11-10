@@ -29,7 +29,7 @@
 (function () {
   'use strict';
   var doc = document;
-  if (!doc.querySelector || !doc.getElementById('journey') || !doc.querySelector('.lx-field')) return;
+  if (!doc.querySelector || !doc.getElementById('journey')) return;     // (3.03) also on Inside an MRI, which has no leaves
   var LANG = doc.documentElement.lang;
   var DIGITS = { fa: '۰۱۲۳۴۵۶۷۸۹', ar: '٠١٢٣٤٥٦٧٨٩' };
 
@@ -394,7 +394,11 @@
     var right = $('.lx-in-order', feedback);
     var notYet = $('.lx-not-yet', feedback);
     var ORDER = $all('.lx-stage', list).map(function (li) { return li.getAttribute('data-stage'); });   // the usual order
-    var FIRST = [2, 5, 0, 4, 1, 3];       // the first mix-up, the same in every language: no stage in its place
+    // The first mix-up, the same in every language: no stage in its place. Six stages on the LINAC page; (3.03) seven on
+    // the MRI page, whose seventh stage stayed first, and its fifth in its place, with the six-stage mix-up (found by
+    // mri_page.py, 9 November 2026); any other number, each stage one place on.
+    var FIRST = { 6: [2, 5, 0, 4, 1, 3], 7: [2, 5, 0, 6, 1, 3, 4] }[ORDER.length] ||
+      ORDER.map(function (s, k) { return (k + 1) % ORDER.length; });
     function stages() { return $all('.lx-stage', list); }
     function placed() { return stages().filter(function (li, k) { return li.getAttribute('data-stage') === ORDER[k]; }).length; }
     function buttons() {

@@ -1704,17 +1704,30 @@
   // also a box in a row of its own (the class is-even: rows of one size, site.css): on Standards in Medicine, Where to
   // start learning; on Inside a LINAC, Who checks the machine and the three principles. One under another, on phones,
   // each fits its text, as without the script.
+  // (3.03, Ali, 9 November 2026) The same on Inside an MRI: its four hazards, its three labels and its three cases. And
+  // the calendar cards' titles are one height too: where one title takes two lines ("After a repair or an upgrade",
+  // on some screens), every title of the calendar takes its height, its words in the middle (site.css .lx-when). The
+  // names under the titles, one line each since that day, do the same if one ever takes two.
   (function () {
-    var grids = $all('.starts, .lx-checks, .lx-principles');
+    var grids = $all('.starts, .lx-checks, .lx-principles, .mx-hazards, .mx-labels, .mx-cases');
     if (!grids.length || !window.getComputedStyle) return;
     var timer = null;
     function even() {
       grids.forEach(function (g) {
-        g.classList.toggle('is-even', getComputedStyle(g).gridTemplateColumns.split(' ').length > 1);
+        var side = getComputedStyle(g).gridTemplateColumns.split(' ').length > 1;
+        g.classList.toggle('is-even', side);
+        ['.lx-when', '.lx-check-who'].forEach(function (sel) {
+          var row = $all(sel, g), tallest = 0;
+          row.forEach(function (t) { t.style.minHeight = ''; });
+          if (!side) return;
+          row.forEach(function (t) { tallest = Math.max(tallest, t.getBoundingClientRect().height); });
+          row.forEach(function (t) { t.style.minHeight = tallest + 'px'; });
+        });
       });
     }
     even();
     on(window, 'resize', function () { clearTimeout(timer); timer = setTimeout(even, 120); });
+    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(even);
   })();
 
   // ---------------------------------------------------------------- What this page covers (Standards in Medicine)
