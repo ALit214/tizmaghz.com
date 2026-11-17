@@ -639,23 +639,38 @@
     F.beads(places, F.flip([[466, 458], [466, 408]]), 16, { rnd: rnd, from: 1.5, span: 0.2, r: 5.6, kind: 'couch' });
     F.beads(places, F.flip([[270, 391], [518, 391]]), 16.5, { rnd: rnd, from: 1.7, span: 0.3, r: 5.6, kind: 'couch' });
     // the patient lying on it, head towards the machine: pale cells, and the tumor under the head
-    function inBody(x, y) {
-      if (Math.hypot(x - 286, y - 366) <= 11) return true;                 // the head
-      if (x >= 309 && x <= 440 && y >= 356 && y <= 377) return true;       // the trunk
-      if (x >= 440 && x <= 498 && y >= 361 && y <= 377) return true;       // the legs
-      return x >= 497 && x <= 507 && y >= 350 && y <= 377;                  // the feet
-    }
     // the body's outline: the head, the neck, the trunk and the legs, and the feet pointing up
-    var SKIN = F.flip(arcLine(286, 366, 16, 0.55, TAU - 0.55).concat(outline([[303, 357], [310, 350, 6], [442, 350, 10],
-      [450, 356, 6], [496, 356, 4], [498, 342, 5], [512, 342, 5], [512, 383], [303, 383], [303, 375]], false)));
+    var SKIN0 = arcLine(286, 366, 16, 0.55, TAU - 0.55).concat(outline([[303, 357], [310, 350, 6], [438, 350, 10],
+      [458, 365, 6], [496, 365, 4], [498, 342, 5], [512, 342, 5], [512, 383], [303, 383], [303, 375]], false));
+    var SKIN = F.flip(SKIN0);
+    // (3.04, stage 6, fourth round, Ali) no cell over the outline: inside it, and at least 6.3 from it
+    function inBody(x, y) {
+      if (x < 296 || x > 497) return false;                                // the head and the foot: placed by hand, below
+      var near = Infinity, inside = false;
+      for (var i = 0; i < SKIN0.length; i++) {
+        var a = SKIN0[i], b = SKIN0[(i + 1) % SKIN0.length];               // (the last side closes the neck's gap)
+        if ((a[1] > y) !== (b[1] > y) && x < a[0] + (y - a[1]) * (b[0] - a[0]) / (b[1] - a[1])) inside = !inside;
+        if (i === SKIN0.length - 1) continue;
+        var dx = b[0] - a[0], dy = b[1] - a[1];
+        var t = clamp01(((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy || 1));
+        near = Math.min(near, Math.hypot(x - a[0] - t * dx, y - a[1] - t * dy));
+      }
+      return inside && near >= 6.3;
+    }
     var TUMOR = { x: 371, y: 366 };
-    honeycomb(inBody, 11.5, 300, 366).forEach(function (p) {
+    honeycomb(inBody, 11.2, 300, 366.5).forEach(function (p) {
       if (Math.hypot(p.x - TUMOR.x, p.y - TUMOR.y) < 12) return;
-      places.push({ x: X(p.x) + (rnd() - 0.5) * 1.6, y: p.y + (rnd() - 0.5) * 1.6, r: 5, color: F.PALE,
-                    arrive: 1.85 + 0.3 * rnd(), late: true, kind: 'body' });
+      var x = p.x + (rnd() - 0.5) * 1.6, y = p.y + (rnd() - 0.5) * 1.6;
+      if (!inBody(x, y)) { x = p.x; y = p.y; }
+      places.push({ x: X(x), y: y, r: 5, color: F.PALE, arrive: 1.85 + 0.3 * rnd(), late: true, kind: 'body' });
     });
+    // the head's four cells, and the foot's three, staggered a little, from the toes down
+    [[280.3, 360.8], [290.7, 360.8], [280.3, 371.2], [290.7, 371.2], [504.6, 349], [505.5, 359.3], [504.7, 369.6]].forEach(function (c) {
+      places.push({ x: X(c[0]), y: c[1], r: 5, color: F.PALE, arrive: 1.85 + 0.3 * rnd(), late: true, kind: 'body' });
+    });
+    var PINK = rgb('#E3559F'), PINKS = 1, PINK_FADED = mix(PINK, [255, 255, 255], 0.5);          // (3.04, stage 6) the tumor's own cells
     [[0, 0, 7], [-9, -3, 5.5], [9, -2, 5.5], [0, 7, 5]].forEach(function (c, i) {
-      places.push({ x: X(TUMOR.x + c[0]), y: TUMOR.y + c[1], r: c[2], color: F.WHITE, arrive: 2.25 + 0.04 * i, late: true, kind: 'core' });
+      places.push({ x: X(TUMOR.x + c[0]), y: TUMOR.y + c[1], r: c[2], color: i < PINKS ? PINK : F.WHITE, arrive: 2.25 + 0.04 * i, late: true, kind: i < PINKS ? 'core-pink' : 'core' });
     });
     // the electrons: five cells, one in each colour, gathering at the start of the arm
     var GUN = { x: 150, y: 167 };
@@ -741,6 +756,9 @@
       F.draw(looks, ['body'], null, F.PATIENT);
       if (lit > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; F.glow(X(TUMOR.x), TUMOR.y, 40, 0.14 * lit); ctx.restore(); }
       F.draw(looks, ['core']);
+      F.draw(looks, ['core-pink'], function (l) {                // (3.04, stage 6, Ali) fading as the beam works
+        return { x: l.x, y: l.y, color: mix(PINK, PINK_FADED, clamp01(lit / 5)) };
+      });
       looks.forEach(function (l) {                           // the electrons
         if (l.target.kind !== 'e') return;
         var k = l.target.k, d = run(k, t);
@@ -1173,7 +1191,161 @@
   kit.scanner = scanner;
   kit.sign = sign;
   kit.pin = youAreHere;
-  var ART = { reading: shelf, standards: seal, devices: lookInside, linac: side, mri: scanner, accessibility: sign,
+  // ================================================================ Inside an Ultrasound Scanner (3.04)
+  // The picture at the top of "Inside an Ultrasound Scanner" (learn/devices/ultrasound/): design 1e, Ali's choice of
+  // 13 November 2026 on the review page "Inside an Ultrasound Scanner Pictures" (its version 6), brought in word for
+  // word from that page's source: the helpers, then the picture (usSideZone), drawn with the measures of 1e.
+  // A curved probe standing on its face at (fx, fy), its handle leaning by tilt (radians; positive: towards the end of
+  // the page's line), s times the size of the first sketch's probe. English coordinates: flip it for the other pages.
+  function usProbe(fx, fy, tilt, s) {
+    var sn = Math.sin(tilt), cs = Math.cos(tilt);
+    return outline([[-24, 0, 4], [-25, -16, 9], [-10, -30, 5], [-9, -76, 6], [9, -76, 6], [10, -30, 5], [25, -16, 9], [24, 0, 4]]
+      .map(function (p) { return [p[0] * s, p[1] * s, p[2] * s]; }), true)
+      .map(function (p) { return [fx + p[0] * cs - p[1] * sn, fy + p[0] * sn + p[1] * cs]; });
+  }
+  // true for a point of the probe's outline that lies on its face (those cells are white: where it meets the patient)
+  function usOnFace(x, y, fx, fy, tilt) { return -(x - fx) * Math.sin(tilt) + (y - fy) * Math.cos(tilt) > -3; }
+  function usShine(ctx, x, y, r, color, a) {
+    if (a <= 0) return;
+    var g = ctx.createRadialGradient(x, y, 2, x, y, r);
+    g.addColorStop(0, rgba(color, Math.min(1, a)));
+    g.addColorStop(1, rgba(color, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  }
+  function usCable(ctx, F, pts, a) {                         // the probe's cable: four points of one curve
+    if (a <= 0) return;
+    ctx.strokeStyle = rgba(F.MAIN, 0.65 * a); ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    ctx.bezierCurveTo(pts[1][0], pts[1][1], pts[2][0], pts[2][1], pts[3][0], pts[3][1]); ctx.stroke();
+  }
+  function usOn(pts, p) {                                    // a place on that curve (p from 0 to 1)
+    return { x: bez(pts[0][0], pts[1][0], pts[2][0], pts[3][0], p), y: bez(pts[0][1], pts[1][1], pts[2][1], pts[3][1], p) };
+  }
+  // the screen's own picture: a faint fan from (x, y) straight down
+  function usScreenFan(ctx, x, y, r, half, a) {
+    if (a <= 0) return;
+    ctx.fillStyle = 'rgba(255,255,255,' + 0.07 * a + ')';
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, Math.PI / 2 - half, Math.PI / 2 + half); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,' + 0.16 * a + ')'; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  // ---------------------------------------------------------------- 1. from the side
+
+  // ---------------------------------------------------------------- 1b. from the side, the five in the zone
+  // (version 3 of the review page, 13 November 2026. Ali chose design 1 and asked: "let's have our 5 colorful cells
+  // scattered in the round zone being scanned. while the scan is being done, we see them mirroring through the prob on
+  // to screen, again spread out like we have in design #2.") Design 1, with this change: the five, one in each colour,
+  // live in the round zone under the probe, the patient's own, as in Inside an MRI's picture. The screen shows the zone,
+  // larger. During the scan a small pulse goes in to each of the five, the nearest to the probe first; its echo comes
+  // back in its colour, climbs the probe, runs along the cable and takes its place on the screen, where the five stand
+  // as they stand in the body. The five themselves stay where they are.
+  function usSideZone(ctx, dir, o) {
+    var F = family(ctx, dir, 'coral'), rnd = seeded(71), X = F.X, places = [];
+    var CART = F.flip(outline([[244, 446, 10], [244, 366, 6], [356, 366, 6], [356, 446, 10]], true));
+    var NECK = F.flip(outline([[293, 196], [307, 196], [307, 366], [293, 366]], true));
+    var SCREEN = F.flip(outline([[226, 94, 10], [374, 94, 10], [374, 196, 10], [226, 196, 10]], true));
+    F.beads(places, CART, 17, { rnd: rnd, from: 1.4, span: 0.4, r: 6, closed: true, kind: 'cart' });
+    F.beads(places, SCREEN, 17, { rnd: rnd, from: 1.75, span: 0.45, r: 6, closed: true, kind: 'screen' });
+    [[266, 459], [334, 459]].forEach(function (w, i) {
+      places.push({ x: X(w[0]), y: w[1], r: 7, color: F.MAIN, arrive: 1.45 + 0.05 * i, late: true, kind: 'cart' });
+    });
+    var PLANK = F.flip(outline([[96, 334, 6], [504, 334, 6], [504, 347, 6], [96, 347, 6]], true));
+    var LEGS = [148, 452].map(function (x) { return F.flip(outline([[x - 8, 347], [x + 8, 347], [x + 8, F.FLOOR], [x - 8, F.FLOOR]], true)); });
+    [148, 452].forEach(function (x) {
+      F.beads(places, F.flip([[x, 458], [x, 360]]), 16, { rnd: rnd, from: 1.5, span: 0.2, r: 5.6, kind: 'couch' });
+    });
+    F.beads(places, F.flip([[104, 340.5], [496, 340.5]]), 16.5, { rnd: rnd, from: 1.7, span: 0.3, r: 5.8, kind: 'couch' });
+    var D = 17;
+    var SKIN = F.flip(arcLine(140 + D, 312, 19, 0.6, TAU - 0.6).concat(outline([[158 + D, 302], [166 + D, 292, 6], [332 + D, 292, 12],
+      [356 + D, 310, 8], [426 + D, 310, 4], [430 + D, 288, 5], [446 + D, 288, 5], [446 + D, 333], [158 + D, 333], [158 + D, 322]], false)));
+    F.beads(places, SKIN, 11.5, { rnd: rnd, from: 1.85, span: 0.3, r: 4, color: F.PALE, kind: 'body' });
+    var FX = 262, FY = 292, TILT = -0.3, PS = 0.8;
+    var PROBE = F.flip(usProbe(FX, FY, TILT, PS));
+    F.beads(places, PROBE, 10, { rnd: rnd, from: 2.0, span: 0.25, r: 4.4, closed: true, kind: 'probe',
+                                 white: function (p) { return usOnFace(X(p.x), p.y, FX, FY, TILT); } });
+    var TOPX = FX + Math.sin(TILT) * 76 * PS, TOPY = FY - Math.cos(TILT) * 76 * PS;
+    var CABLE = [[X(TOPX), TOPY], [X(TOPX - 14), TOPY - 46], [X(168), 204], [X(226), 150]];
+    // the round zone under the probe, as round as the body's thickness allows, and the five scattered in it
+    var ZONE = { x: 269, y: 313, a: 24, b: 16 };
+    var OFFS = [[-14, -3], [-5, 8], [2, -8], [13, 6], [15, -5]];
+    var bx = -Math.sin(TILT), by = Math.cos(TILT);           // the way the sound goes in
+    var DEEP = OFFS.map(function (o) { return (ZONE.x + o[0] - FX) * bx + (ZONE.y + o[1] - FY) * by; });
+    var TURN = OFFS.map(function (o, k) { return DEEP.filter(function (d, j) { return d < DEEP[k] || (d === DEEP[k] && j < k); }).length; });
+    OFFS.forEach(function (o, k) {
+      places.push({ x: X(ZONE.x + o[0]), y: ZONE.y + o[1], r: 4.6, color: F.TONES[k], arrive: 2.15 + 0.04 * k, late: true, kind: 'five', k: k });
+    });
+    var cells = colony(places, { seed: 43, r0: 6.5, step: 0.16 });
+    // the screen: the zone again, larger (o.sc times), under the fan every ultrasound picture has; o.y: where its middle
+    // is on the screen; o.r and o.grow: how large an echo is on its way, and how much it grows as it takes its place
+    var GO = 2.5, EVERY = 0.3, SC = o.sc, FAN = { x: X(300), y: 100, r: 88 }, VIEW = { x: X(300), y: o.y }, fx = X(FX);
+    var DOTS = OFFS.map(function (o) { return { x: VIEW.x + dir * o[0] * SC, y: VIEW.y + o[1] * SC }; });
+    function echo(l, t) {
+      var k = l.target.k, q = t - (GO + EVERY * TURN[k]), c = F.TONES[k];
+      if (q <= 0) return;
+      var far = Math.hypot(l.x - fx, l.y - FY), to = Math.atan2(l.y - FY, l.x - fx);
+      if (q < 0.3) {                                         // a small pulse goes in to it, and its echo comes back
+        var out = q < 0.15, p = out ? q / 0.15 : (0.3 - q) / 0.15;
+        ctx.strokeStyle = out ? 'rgba(255,255,255,' + 0.85 * (1 - 0.3 * p) + ')' : rgba(c, 0.95);
+        ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.arc(fx, FY, 4 + (far - 6) * p, to - 0.42, to + 0.42); ctx.stroke();
+        return;
+      }
+      var at;
+      if (q < 0.42) { var u = (q - 0.3) / 0.12; at = { x: fx + (CABLE[0][0] - fx) * u, y: FY + (TOPY - FY) * u }; }
+      else if (q < 0.87) at = usOn(CABLE, ease((q - 0.42) / 0.45));
+      else { var v = ease(clamp01((q - 0.87) / 0.22)); at = { x: CABLE[3][0] + (DOTS[k].x - CABLE[3][0]) * v, y: CABLE[3][1] + (DOTS[k].y - CABLE[3][1]) * v }; }
+      var since = q - 1.09, swell = since >= 0 ? 1 + 0.14 * Math.max(0, 1 - since / 0.4) * Math.sin(since * 14) : 1;
+      cell(ctx, at.x, at.y, (q < 0.87 ? o.r : o.r + o.grow * clamp01((q - 0.87) / 0.22)) * swell, c, 1);
+    }
+    function frame(t) { ctx.save(); draw(Math.max(0, Math.min(5, t))); ctx.restore(); }
+    function draw(t) {
+      ctx.clearRect(0, 0, SIZE, SIZE);
+      F.ground(t);
+      var a1 = clamp01((t - 2.0) / 0.5), looks = cells.draw(ctx, t);
+      F.part(CART, a1, { solid: 0.6, fill: 0.12, edge: 0.45 });
+      F.part(NECK, a1, { solid: 0.6, fill: 0.12, edge: 0.4 });
+      F.part(SCREEN, a1, { solid: 0.85, fill: 0.06, edge: 0.55 });
+      usScreenFan(ctx, FAN.x, FAN.y, FAN.r, 0.8, a1);
+      // the zone, as the screen shows it: with the scanner (1b to 1d), or only once the scan has begun to find it,
+      // o.late seconds after the scan starts (1e)
+      var az = o.late == null ? a1 : a1 * ease(clamp01((t - GO - o.late) / 0.35));
+      if (az > 0) {
+        ctx.fillStyle = 'rgba(239,232,248,' + 0.05 * az + ')'; ctx.strokeStyle = 'rgba(239,232,248,' + 0.4 * az + ')'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.ellipse(VIEW.x, VIEW.y, ZONE.a * SC, ZONE.b * SC, 0, 0, TAU); ctx.fill(); ctx.stroke();
+      }
+      F.draw(looks, ['cart', 'screen']);
+      LEGS.forEach(function (g) { F.part(g, a1, { solid: 0.8, fill: 0.12, edge: 0.4 }); });
+      F.part(PLANK, a1, { solid: 0.8, fill: 0.16, edge: 0.55 });
+      F.draw(looks, ['couch']);
+      if (a1 > 0) {
+        F.trace(SKIN, true); ctx.fillStyle = 'rgba(16,8,32,' + 0.85 * a1 + ')'; ctx.fill();
+        ctx.fillStyle = 'rgba(239,232,248,' + 0.07 * a1 + ')'; ctx.fill();
+        F.trace(SKIN, false); ctx.strokeStyle = 'rgba(239,232,248,' + 0.5 * a1 + ')'; ctx.lineWidth = 1.4; ctx.stroke();
+        ctx.fillStyle = 'rgba(239,232,248,' + 0.06 * a1 + ')'; ctx.strokeStyle = 'rgba(239,232,248,' + 0.45 * a1 + ')'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.ellipse(X(ZONE.x), ZONE.y, ZONE.a, ZONE.b, 0, 0, TAU); ctx.fill(); ctx.stroke();   // the zone, in the body
+      }
+      F.draw(looks, ['body'], null, F.PATIENT);
+      looks.forEach(function (l) {                           // the five, in the zone: each swells as the pulse reaches it
+        if (l.target.kind !== 'five') return;
+        var since = t - (GO + EVERY * TURN[l.target.k]) - 0.15;
+        var swell = since >= 0 ? 1 + 0.3 * Math.max(0, 1 - since / 0.45) * Math.sin(since * 14) : 1;
+        var lit = clamp01(1 - Math.abs(since) / 0.14);
+        if (lit > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; usShine(ctx, l.x, l.y, 13, l.color, 0.6 * lit); ctx.restore(); }
+        cell(ctx, l.x, l.y, l.r * swell, l.color, l.alpha);
+      });
+      usCable(ctx, F, CABLE, a1);
+      F.part(PROBE, a1, { solid: 0.85, fill: 0.2, edge: 0.55 });
+      F.draw(looks, ['probe']);
+      looks.forEach(function (l) { if (l.target.kind === 'five') echo(l, t); });
+    }
+    return { duration: 5.0, frame: frame };
+  }
+  // 1e: the zone one and a half times as large on the screen, the cells on the screen in the zone's own measure, and
+  // the zone fading in on the screen as the first echo comes off the cable (from 0.72 s after the scan starts).
+  function ultrasound(ctx, dir) { return usSideZone(ctx, dir, { sc: 1.5, y: 154, r: 4.4, grow: 2.5, late: 0.72 }); }
+  kit.ultrasound = ultrasound;
+  var ART = { reading: shelf, standards: seal, devices: lookInside, linac: side, mri: scanner, ultrasound: ultrasound, accessibility: sign,
               sitemap: youAreHere };
   var ideas = window.pageArtIdeas || {};          // review copies can bring other pictures (see their page)
   Object.keys(ideas).forEach(function (k) { ART[k] = function (ctx, dir) { return ideas[k](ctx, dir, kit); }; });

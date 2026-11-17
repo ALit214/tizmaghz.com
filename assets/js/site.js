@@ -717,18 +717,32 @@
     });
   });
 
+  // ---------------------------------------------------------------- the email links (3.04, stage 7a)
+  // The address is in no page's text: each mail link leads to Work with Me, where the page shows it as
+  // "name [at] gmail [dot] com" without this script. Here it is put together only when a link is used: the click
+  // gives the link its mail address, which the browser then follows as with any mail link.
+  var MAIL = DATA.mail && DATA.mail.length === 2 ? DATA.mail.join('@') : '';
+  on(doc, 'click', function (ev) {
+    var a = ev.target && ev.target.closest ? ev.target.closest('a[data-mail]') : null;
+    if (!a || !MAIL) return;
+    var subject = a.getAttribute('data-mail');
+    a.setAttribute('href', 'mailto:' + MAIL + (subject ? '?subject=' + subject : ''));
+  });
+
   // ---------------------------------------------------------------- copy the email address
   (function () {
     var button = $('[data-copy]');
     var address = $('[data-email]');
     var status = $('[data-copy-status]');
-    if (!button || !address || !status) return;
+    if (!button || !address || !status || !MAIL) return;
     function say(text, failed) {
       status.textContent = '';
       status.setAttribute('data-result', failed ? 'failed' : 'copied');
       setTimeout(function () { status.textContent = text; }, 30);
     }
     function selectAddress() {
+      address.textContent = MAIL;     // shown only when copying fails, so it can be copied by hand
+      address.hidden = false;
       try {
         var range = doc.createRange();
         range.selectNodeContents(address);
@@ -740,7 +754,7 @@
     on(button, 'click', function () {
       var failed = function () { selectAddress(); say(T.copyFailed, true); };
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(DATA.email).then(function () { say(T.copied, false); }, failed);
+        navigator.clipboard.writeText(MAIL).then(function () { say(T.copied, false); }, failed);
       } else {
         failed();
       }
@@ -1790,8 +1804,24 @@
       if (y > 0) Masthead.away();
       jumpTo(y);
     }
-    // After the browser's own glide to the section (well under a second).
-    function later() { setTimeout(settle, 900); }
+    // After the browser's own glide to the section. (3.04) On a long page the glide can take longer than the 0.9
+    // seconds this used to wait (about 5,200 px took just over a second), and a correction made while the page was
+    // still gliding left the section 17 to 20 px low. So the correction comes no sooner than before, and only once
+    // the page has stood still for a fifth of a second; it gives up after five seconds, or when the reader moves.
+    function later() {
+      var last = window.pageYOffset, still = 0, waited = 0;
+      (function watch() {
+        setTimeout(function () {
+          if (moved) return;
+          var y = window.pageYOffset;
+          waited += 100;
+          still = y === last ? still + 100 : 0;
+          last = y;
+          if (waited >= 900 && still >= 200) settle();
+          else if (waited < 5000) watch();
+        }, 100);
+      })();
+    }
     if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(later);
     on(window, 'load', later);
   })();

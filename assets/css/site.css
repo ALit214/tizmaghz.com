@@ -674,7 +674,7 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 /* Until the script has chosen the activity, only the first one shows, as it will once the script runs. */
 .js .activities:not(.is-ready) > .activity:not(:first-child) { display: none; }
 .activity::before { content: ''; display: block; height: 8px; background: var(--tone); }
-.activity-inner { padding: clamp(20px, 3.4vw, 44px); }
+.activity-inner { padding: clamp(20px, 3.4vw, 44px); }   /* (3.04) the Quick quiz's width reckons with this padding */
 .activity-head h3 {
   margin: 0; font-family: var(--font-h3); font-weight: var(--w-h3);
   font-size: var(--size-h3); line-height: var(--lh-h3); letter-spacing: var(--track-head);
@@ -692,6 +692,10 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 .source { margin: 28px 0 0; font-size: 14px; color: var(--muted); }
 .source a { font-weight: 600; }
 .source-link { font-family: var(--font-ui); font-size: 14px; font-weight: 600; color: var(--muted); }
+/* (3.04, Ali, 14 November 2026) The link after an answer stands on a line of its own, under the answer's last line,
+   in every quiz and activity: "Source", "Read its card", "Read that part again". */
+.feedback .source-link { display: block; width: fit-content; margin-top: 8px; }
+@media (max-width: 719px) { .feedback .source-link { margin-top: 0; line-height: 1.3; } }
 .explore-note { margin: 22px 0 0; max-width: 60em; font-size: 15px; color: var(--muted); }
 .subactivity { margin-top: clamp(32px, 4vw, 48px); padding-top: clamp(24px, 3vw, 32px); border-top: 1.5px solid var(--rule); }
 .subactivity > h4 { font-family: var(--font-h3); font-size: clamp(21px, 0.8vw + 16px, 25px); font-weight: var(--w-h3); }
@@ -959,7 +963,12 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 }
 .topic:hover, .topic:focus-visible { text-decoration: underline; text-decoration-thickness: 2px; }
 .email-block { margin-top: clamp(40px, 5vw, 64px); padding-top: 26px; border-top: 6px solid var(--violet); }
-.email-label { margin: 0; font-family: var(--font-ui); font-weight: 700; color: var(--muted); }
+/* (3.04, stage 7a) "Contact me by email" in the font, size and colour of "I welcome inquiries about:"; the address
+   shows only without JavaScript, in Latin letters, as "name [at] gmail [dot] com", or after copying fails. */
+.email-label { margin: 0; font-size: var(--size-lead); }
+.email-fallback { margin: 8px 0 0; font-family: var(--font-latin); font-weight: 600; font-size: var(--size-lead); overflow-wrap: anywhere; }
+[dir="rtl"] .email-fallback { text-align: right; }
+.js .email-fallback { display: none; }
 .email-address {
   margin: 6px 0 0; font-family: 'Bodoni Moda', var(--font-latin); font-weight: 500;
   font-size: clamp(24px, 5.6vw, 64px); line-height: 1.15; letter-spacing: -0.01em;
@@ -1169,6 +1178,9 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
   border-top: 6px solid var(--tone); background: var(--paper); text-decoration: none;
 }
 .door a:hover { background: var(--tone-soft); }
+/* (3.04, Ali, 14 November 2026) A box shows against its band: on a white band a door takes the page's light gray. */
+.band-paper .door a { background: var(--bg); }
+.band-paper .door a:hover { background: var(--tone-soft); }
 .door-title {
   grid-column: 1; font-family: var(--font-display); font-weight: var(--w-h3);
   font-size: clamp(28px, 1.6vw + 18px, 38px); line-height: 1.1; letter-spacing: var(--track-head);
@@ -1481,6 +1493,7 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 .lx-head { display: block; }
 .lx-head p { margin-top: 12px; }
 .lx-room-pic, .lx-journey-pic, .lx-angles-pic, .lx-frame {
+  max-width: var(--lx-fit, none);   /* (3.04, stage 6) all together, smaller, only in a very short window: linac.js */
   aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; border-radius: 20px;
   background: #0C0618 radial-gradient(ellipse 80% 70% at 50% 35%, #170D31, #0C0618);   /* (3.03) under the night, its darkest
      colour, the same to the eye: for what reads colours without the gradient (the contrast of the slice's ruler) */
@@ -1522,7 +1535,9 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 .no-js .lx-room-pic { max-width: 860px; }
 .js .lx-room[data-view="list"] .lx-room-pic { display: none; }
 .lx-room-parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.no-js .lx-room-parts, .lx-room[data-view="list"] .lx-room-parts { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+/* (3.04, stage 6, item 3) The list in columns, at most three, each card as tall as its text, as Who does what. */
+.no-js .lx-room-parts, .lx-room[data-view="list"] .lx-room-parts { display: block; columns: 3 300px; column-gap: 12px; }
+.no-js .lx-room-part, .lx-room[data-view="list"] .lx-room-part { break-inside: avoid; margin: 0 0 12px; }
 .js .lx-room[data-view="drawing"] .lx-room-part:not(.is-current) { display: none; }
 .lx-room-part { padding: 18px 20px; border-radius: 20px; background: var(--bg); border-top: 6px solid var(--tone); }
 .lx-room-part h3, .lx-step h3, .lx-stage h3 { margin: 0; font-family: var(--font-ui); font-size: 19px; font-weight: 700; line-height: 1.35; }
@@ -1559,7 +1574,7 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 .lx-journey { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px 44px; margin-top: 32px; align-items: start; }
 @media (min-width: 900px) {
   .lx-journey { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); }
-  .lx-journey-pic { position: sticky; top: 112px; }
+  .lx-journey-pic { position: sticky; top: var(--lx-stick, 112px); }   /* (3.04, stage 6) closer to the top bar in a short window: linac.js */
 }
 [dir="rtl"] .lx-head-art { transform: scaleX(-1); }
 .lx-marks { position: absolute; inset: 0; pointer-events: none; }
@@ -1581,13 +1596,16 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
   background: var(--tone-chip); color: var(--tone-chip-fg); font-family: var(--font-ui); font-size: 15px; font-weight: 700; line-height: 1;
 }
 .lx-journey .stepper { margin-top: 14px; }
-/* Go deeper: closed panels, one under another (side by side on wide screens). */
+/* Go deeper: closed panels, one under another. (3.04, Ali, 14 November 2026) On computers too each panel sits on a
+   line of its own, as on phones: each is as tall as its text, and opening one leaves no gap. On computers the panels
+   take the width of the drawing above them, the journey's picture (the column of 6 in 6:5, with its 44 px gap), and
+   start at its edge, so the two line up (Ali, the same day: "yes"). Phones keep the full width. */
 .lx-deeper { margin-top: clamp(36px, 4vw, 52px); padding-top: clamp(24px, 3vw, 32px); border-top: 1.5px solid var(--rule); }
-.lx-deeper h3, .lx-door-box h3, .lx-points-box h3, .lx-sub > h3, .lx-words h3, .lx-role h3 {
+.lx-deeper h3, .lx-door-box h3, .lx-points-box h3, .lx-sub > h3, .lx-words h3, .lx-role h3, .lx-way h3 {
   margin: 0; font-family: var(--font-h3); font-weight: var(--w-h3); font-size: clamp(21px, 0.8vw + 16px, 25px); line-height: var(--lh-h3);
 }
 .lx-deeper > p { margin: 8px 0 0; color: var(--muted); }
-.lx-deeps { display: grid; gap: 10px 14px; margin-top: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); align-items: start; }
+.lx-deeps { display: grid; gap: 10px 14px; margin-top: 16px; grid-template-columns: minmax(0, 1fr); max-width: 46em; align-items: start; }
 .lx-deep { border-radius: 16px; background: var(--paper); }
 .lx-deep summary {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 10px 16px 10px 18px;
@@ -1598,6 +1616,16 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 .lx-deep summary .icon { transition: transform 0.2s ease; }
 .lx-deep[open] summary .icon { transform: rotate(180deg); }
 .lx-deep p { margin: 0; padding: 2px 18px 16px; }
+@media (min-width: 900px) { .lx-deeps { max-width: calc((100% - 44px) * 6 / 11); } }   /* the journey's picture's width, as above */
+/* (3.04, Ali, 14 November 2026) The quiz of a device tutorial (Check your understanding) and of Standards in Medicine
+   takes the same width on computers, so it lines up with the drawing and Go deeper above it; phones as before. The home
+   page's Quick quiz too (Ali, the same evening): inside its activity box the width is reckoned from the box's outer
+   edge (its padding is .activity-inner's, below: change the two together), so it is the same number of pixels. The
+   three lists of cards and Sort the equipment's card wait for stage 6. tests/quiz_width.py holds all five. */
+@media (min-width: 900px) {
+  .lx-quiz .quiz, .std-quiz .quiz { max-width: calc((100% - 44px) * 6 / 11); }
+  .activity .quiz { max-width: calc((100% + 2 * clamp(20px, 3.4vw, 44px) - 44px) * 6 / 11); }
+}
 
 /* 4. Shape the beam: the field as the treatment head sees it (the light where the beam passes, with a dark margin on
    each side where the leaves rest when fully out), and ten pairs of leaves over it, each a slider. The field keeps
@@ -1725,6 +1753,9 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 .lx-sub-intro { margin: 8px 0 0; max-width: 46em; }
 .lx-sub-intro .lx-label { margin-inline-end: 6px; }
 .lx-checks { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+/* (3.04, Ali, 14 November 2026) The calendar's cards stand two to a row on computers, on every device tutorial; on
+   phones one to a row, as before. They keep one size (is-even), and a last card alone keeps it. */
+@media (min-width: 720px) { .lx-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .lx-check { position: relative; overflow: hidden; border-radius: 18px; background: var(--paper); }
 /* a calendar's page: its top in the page's colour, with two rings */
 .lx-check::before, .lx-check::after { content: ''; position: absolute; top: 7px; width: 9px; height: 9px; border-radius: 50%; background: var(--paper); }
@@ -1742,6 +1773,8 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 .lx-principle { padding: 20px 22px 22px; border-radius: 20px; border-top: 6px solid var(--violet); background: var(--paper); }
 .lx-principle h4 { margin: 0; font-family: var(--font-h3); font-size: 22px; font-weight: var(--w-h3); line-height: var(--lh-h3); }
 .lx-principle p { margin: 8px 0 0; }
+/* (3.04, Ali, 14 November 2026) A box shows against its band: on a white band the boxes of three take the light gray. */
+.band-paper .lx-principle { background: var(--bg); }
 /* (Ali, 4 November 2026) side by side, the boxes of a set are one size, also a box in a row of its own: rows of one
    height (site.js sets is-even where there are two columns or more): the calendar cards and the three principles here,
    and Where to start learning on Standards in Medicine (.starts); on phones each fits its text. (3.03, Ali, 9 November
@@ -1762,17 +1795,14 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 .mx-sub > .lx-sub-intro:first-child, .mx-sub > .lx-iran-label:first-child { margin-top: 0; }
 .lx-deep-label { margin-top: 10px; }
 
-/* 8. Who does what: a card for each person, like the starting points on Standards in Medicine. */
-.lx-roles { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
-.lx-role { padding: 22px clamp(20px, 2.4vw, 28px) 24px; border-radius: 24px; border-top: 6px solid var(--tone); background: var(--bg); }
-.lx-role p { margin: 8px 0 0; }
-/* (Ali's idea, 4 November 2026) Where the cards stand side by side, all six are one size: linac.js gives them the
-   height of the tallest of the others when one is much longer, and that one shows its first lines, fading out, and
-   "Show more", which opens it in place. On phones, and without the script, every card shows all of its text. */
-.lx-roles.is-even { align-items: start; }
-.lx-role.is-clamped p { overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 2.4em), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 2.4em), transparent); }
-.lx-more { display: inline-flex; margin-top: 10px; padding: 0; border: 0; background: none; color: var(--tone-text); font: 700 15px/1.5 var(--font-ui); text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; cursor: pointer; }
-.lx-more:hover, .lx-more:focus-visible { text-decoration-thickness: 3px; }
+/* 8. Who does what: a card for each person, like the starting points on Standards in Medicine. (3.04) Part 6 of
+   Inside a LINAC, Many ways to treat, has a card for each way, the same cards (.lx-ways, .lx-way). */
+.lx-roles, .lx-ways { list-style: none; margin: 32px 0 0; padding: 0; columns: 3 300px; column-gap: 16px; }
+.lx-role, .lx-way { break-inside: avoid; margin: 0 0 16px; padding: 22px clamp(20px, 2.4vw, 28px) 24px; border-radius: 24px; border-top: 6px solid var(--tone); background: var(--bg); }
+.lx-role p, .lx-way p { margin: 8px 0 0; }
+/* (3.04, stage 6, Ali's choice B of 15 November 2026; it replaces the one size of 4 November) Each card is as tall as
+   its text, the cards in columns, at most three (two in a narrower window, one on phones), read down each column; no
+   "Show more", and no empty boxes. */
 .lx-others { margin: 20px 0 0; max-width: 60em; color: var(--muted); }
 
 /* 9 and 10. The quiz; the words of the tutorial beside its sources (one under the other on narrower screens). */
@@ -2012,6 +2042,8 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 .mx-head figcaption { margin-top: 10px; font-size: 15px; }
 .mx-pick { width: 100%; justify-content: center; text-align: center; }
 .mx-fluid-after { margin-top: 14px; }
+/* (3.04) Under them, what some exams measure. */
+.mx-measure { margin: 16px 0 0; }
 .mx-knock { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 22px; margin: 14px 0 16px; padding: 16px; }
 .mx-knock-art { display: block; flex: none; width: 200px; max-width: 100%; height: auto; }
 .mx-knock-side { flex: 1 1 200px; min-width: 0; }
@@ -2176,8 +2208,183 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 :root[data-nf="fa"] .story-card:not([lang="fa"]),
 :root[data-nf="ar"] .story-card:not([lang="ar"]) { display: none; }
 
+/* ------------------------------------------------------------ Inside an Ultrasound Scanner (since version 3.04) */
+/* The third tutorial (learn/devices/ultrasound/), built like Inside an MRI, whose classes it shares where they are the
+   same thing (lx-*, mx-*, above). Meet the machine (art_us.us_room_svg) needs nothing more than the room's rules, but
+   for the line under it. From an echo to a picture (art_us.us_scan_svg): the scan beside its steps, mirrored on the
+   Persian and Arabic pages, as the MRI's scanner is; the script lights each step's part and shows what happens from
+   its step on. Its own parts follow: Time the echo (part 4), What it shows, and what it cannot (part 5) and Safety by
+   design (part 7). Every state the script starts in is set here from the first moment (.js), so nothing moves when it
+   arrives; without it each part shows all it says. With reduced motion the pulse does not travel and nothing flows
+   (the script, and the rule at the end of this file). */
+[dir="rtl"] .us-scan-art { transform: scaleX(-1); }
+.js .us-scan-art .lx-part-art:not(.is-lit) { opacity: 0.4; }
+.js .us-scan-art .lx-beam-art:not(.is-on) { opacity: 0; }
+.lx-room-note { max-width: 52em; margin-top: 20px; font-size: inherit; color: inherit; padding: 14px 18px; border-inline-start: 4px solid var(--tone); border-radius: 0 12px 12px 0; background: var(--bg); }
+[dir="rtl"] .lx-room-note { border-radius: 12px 0 0 12px; }
+.ux-checks-note { max-width: 52em; }
+.ux-principle-link { font-family: var(--font-ui); font-size: 15px; font-weight: 700; }
+/* (3.04, Ali, 16 November 2026) "Open Inside a LINAC" and "Open Inside an MRI" in the colour of the page each opens
+   (build.py puts its tone class on the paragraph), as the line at the top, not in their card's violet: the underline in
+   the colour, and (Ali: "let's have the full line colored not only the underline") the words in its text shade, as the
+   site's other coloured links; under the pointer only the underline turns to the text colour. */
+.ux-principle-link[class*="tone-"] { --link-tone: var(--tone); }
+.ux-principle-link[class*="tone-"] a { color: var(--tone-text); }
+
+/* 4. Time the echo. Choose the pitch: the slider over the line, the bars beside (under on phones). */
+@media (min-width: 900px) {
+  .ux-tuner { grid-template-areas: "dial read" "line read"; }
+  .ux-pitch-lines { grid-area: line; }
+  .no-js .ux-tuner { grid-template-columns: minmax(0, 1fr); grid-template-areas: "line"; }
+}
+.ux-bars { grid-template-columns: minmax(0, 1fr); }
+.ux-bars li { align-items: center; }
+.ux-bar-name { flex: none; min-width: 5.5em; font-family: var(--font-ui); font-size: 15px; font-weight: 700; }
+.ux-bar { flex: 1 1 auto; display: block; height: 14px; border-radius: 7px; background: var(--rule); overflow: hidden; }
+.ux-bar-fill { display: block; width: 60%; height: 100%; border-radius: 7px; transition: width 0.25s ease; }
+.ux-bar-detail { background: var(--teal); }
+.ux-bar-reach { background: var(--magenta); }
+.ux-pitch-lines p { margin: 0; }
+.js .ux-pitch-lines p:not(.is-current) { display: none; }
+.no-js .ux-pitch-lines p + p { margin-top: 8px; }
+/* The game: the drawing beside the round's lines (under them on phones), in the MRI game's split. The drawing's
+   states (art_us.us_echo_svg): the round's boundary; the fourth echo's layer of fat; the pulse, on its way down and
+   back while the round is "sent"; the dot the scanner draws, once the answer is right. Without the script: the three
+   boundaries and their dots. */
+.ux-game .mx-game-top { display: block; }
+.ux-game .mx-game-top h3 { margin: 0; font-family: var(--font-h3); font-weight: var(--w-h3); font-size: clamp(21px, 0.8vw + 16px, 25px); line-height: var(--lh-h3); }
+.ux-game .mx-game-top .mx-how { margin: 8px 0 0; }
+.ue-wall, .ue-fat, .ue-dot, .ue-pulse, .ue-back { opacity: 0; transition: opacity 0.3s ease; }
+.ux-game[data-round="1"] .ue-wall[data-round="1"], .ux-game[data-round="2"] .ue-wall[data-round="2"],
+.ux-game[data-round="3"] .ue-wall[data-round="3"], .ux-game[data-round="4"] .ue-wall[data-round="4"],
+.ux-game[data-round="4"] .ue-fat { opacity: 1; }
+.ux-game[data-dot="5"] .ue-dot[data-d="5"], .ux-game[data-dot="10"] .ue-dot[data-d="10"], .ux-game[data-dot="15"] .ue-dot[data-d="15"],
+.ux-game[data-dot="20"] .ue-dot[data-d="20"], .ux-game[data-dot="deep"] .ue-dot-deep { opacity: 1; }
+.no-js .ue-wall:not([data-round="4"]), .no-js .ue-dot[data-d="5"], .no-js .ue-dot[data-d="10"], .no-js .ue-dot[data-d="15"] { opacity: 1; }
+.ux-game[data-state="ready"] .ue-pulse { opacity: 1; }
+/* (3.04, Ali, 14 November 2026) the pulse goes down in pink (ue-pulse) and comes back from the boundary as the echo, in
+   cyan, its arcs facing up (ue-back): the first half of the time down, the second half back */
+.ux-game[data-state="sent"] .ue-pulse { transition: none; animation: ue-down var(--ue-time, 1s) linear both; }
+.ux-game[data-state="sent"] .ue-back { transition: none; animation: ue-up var(--ue-time, 1s) linear both; }
+@keyframes ue-down { 0% { transform: translateY(0); opacity: 1; } 49.9% { transform: translateY(var(--ue-y, 60px)); opacity: 1; } 50%, 100% { transform: translateY(var(--ue-y, 60px)); opacity: 0; } }
+@keyframes ue-up { 0%, 49.9% { transform: translateY(var(--ue-y, 60px)); opacity: 0; } 50% { transform: translateY(var(--ue-y, 60px)); opacity: 1; } 100% { transform: translateY(0); opacity: 1; } }
+/* The scale's numbers, beside its ticks (the page's own digits and unit). */
+.ux-depths { position: absolute; inset: 0; pointer-events: none; }
+.ux-depths span { position: absolute; translate: -100% -50%; color: #CFC6E6; font-family: var(--font-ui); font-size: clamp(10px, 1.6vw, 13px); font-weight: 600; line-height: 1.2; white-space: nowrap; }
+[dir="rtl"] .ux-depths span { direction: rtl; }
+.ux-game .progress { margin-bottom: 8px; }
+.ux-fat-line, .ux-time, .ux-q { margin: 0 0 10px; }
+.ux-time { font-weight: 700; }
+.ux-send, .ux-next { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.ux-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ux-choices .ux-choice { width: 100%; justify-content: center; text-align: center; }
+.ux-choices .ux-choice[data-fat] { grid-column: 1 / -1; }
+.ux-choice[aria-disabled="true"] { cursor: default; }
+.ux-choice[aria-disabled="true"]:not([data-state]) { opacity: 0.55; }
+.ux-choice[aria-disabled="true"]:not([data-state]):hover { background: transparent; }
+.ux-feedback { display: none; }
+.ux-feedback.is-shown { display: block; }
+.ux-done { margin-top: 8px !important; font-weight: 700; }
+
+/* 5. What it shows, and what it cannot: the two lists, side by side; the clues' pictures and the four false marks; the
+   whoosh; and the table of four kinds of scan (each row a small card on phones). */
+.ux-lists { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; margin-top: 32px; }
+.ux-list { padding: 22px 24px 24px; border-top: 6px solid var(--teal); }
+.ux-list-limits { border-top-color: var(--coral); }
+.ux-list h3 { margin: 0; font-family: var(--font-h3); font-weight: var(--w-h3); font-size: 22px; line-height: var(--lh-h3); }
+.ux-list ul { margin: 12px 0 0; padding-inline-start: 1.2em; }
+.ux-list li + li { margin-top: 6px; }
+.ux-clues-top { margin-top: clamp(40px, 5vw, 56px); }
+.ux-exam { margin-top: 28px; }
+.ux-game-intro { margin: 0; max-width: 46em; }
+.ux-clues-q { margin: 14px 0 0; font-family: var(--font-ui); font-weight: 700; }
+.us-clue-art { display: block; width: 100%; height: auto; border-radius: 16px; }
+.js .mx-head-pic:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* (3.04, Ali, 14 November 2026) the four false marks as pairs, two to a row on computers: the drawing (in the body, an
+   arrow, on the screen), a caption under each half, then the mark's name and line. The drawing is not mirrored on
+   Persian and Arabic pages, so the captions keep the drawing's order there too (row-reverse). */
+.ux-clues-top h4 { margin: 28px 0 0; font-family: var(--font-ui); font-size: 17px; font-weight: 700; }
+.ux-marks-how { margin: 8px 0 0; max-width: 46em; }
+.ux-marks { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 720px) { .ux-marks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ux-mark { padding: 14px 14px 16px; }
+.ux-mark p { margin: 12px 2px 0; font-size: 15px; line-height: 1.55; }
+.us-pair-art { display: block; width: 100%; height: auto; border-radius: 14px; }
+.ux-caps { display: flex; margin-top: 6px; font-family: var(--font-ui); font-size: 13px; font-weight: 700; color: var(--muted); text-align: center; }
+.ux-caps span { flex: 1 1 0; min-width: 0; padding-inline: 4px; }
+[dir="rtl"] .ux-caps { flex-direction: row-reverse; }
+.us-whoosh-art { display: block; flex: none; width: 200px; max-width: 100%; height: auto; }
+.uw-waves { opacity: 0.18; transition: opacity 0.25s ease; }
+.ux-whoosh[data-flow="on"] .uw-waves { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .ux-whoosh[data-flow="on"] .uw-cells { animation: uw-flow 1.6s linear infinite; }
+  .ux-whoosh[data-flow="on"] .uw-wave { animation: mx-knock-out 0.9s ease-out infinite; }
+  .ux-whoosh[data-flow="on"] .uw-wave[data-k="1"] { animation-delay: 0.12s; }
+  .ux-whoosh[data-flow="on"] .uw-wave[data-k="2"] { animation-delay: 0.24s; }
+}
+@keyframes uw-flow { from { transform: translateX(0); } to { transform: translateX(40px); } }
+.ux-table { width: 100%; margin-top: 18px; border-collapse: collapse; }
+.ux-table th, .ux-table td { padding: 12px 14px; border-bottom: 1.5px solid var(--rule); text-align: start; vertical-align: top; }
+.ux-table thead th { font-family: var(--font-ui); font-size: 14px; font-weight: 700; color: var(--muted); }
+.ux-table tbody th { font-family: var(--font-ui); font-weight: 700; white-space: nowrap; color: var(--tone-text); }
+@media (max-width: 699px) {
+  .ux-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .ux-table, .ux-table tbody, .ux-table tr, .ux-table th, .ux-table td { display: block; }
+  .ux-table tr { padding: 12px 0; border-bottom: 1.5px solid var(--rule); }
+  .ux-table th, .ux-table td { padding: 2px 0; border: 0; }
+  .ux-table td::before { content: attr(data-th) ": "; font-family: var(--font-ui); font-size: 14px; font-weight: 700; color: var(--muted); }
+}
+
+/* 7. Safety by design: the two habits, side by side (one under the other on phones), each a box with a stripe; the
+   box on a damaged probe; and the four events, two by two. */
+.ux-safety .lx-head p { max-width: 52em; font-weight: 600; }
+.ux-habits { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 18px; margin-top: 32px; }
+.ux-habit { padding: clamp(20px, 3vw, 30px); border-top: 6px solid var(--tone); }
+.ux-habit h3 { margin: 0; font-family: var(--font-h3); font-weight: var(--w-h3); font-size: clamp(21px, 0.8vw + 16px, 25px); line-height: var(--lh-h3); }
+.ux-habit p { margin: 12px 0 0; }
+.ux-more, .ux-habit-iran { padding-top: 12px; border-top: 1.5px solid var(--rule); }
+.ux-fault { margin-top: clamp(32px, 4vw, 44px); }
+@media (min-width: 700px) { .ux-cases { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 /* ------------------------------------------------------------ motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-delay: 0s !important; }
   .dish-art .depth { transform: none; }
 }
+
+/* ---------------------------------------------------------------- 3.04, stage 6: the layout changes Ali chose
+   (the review page "3.04 stage 6: layout changes, mock-ups", version 11; 15 November 2026) */
+/* Item 2. Meet the machine: where the drawing is narrow (phones), smaller buttons, 24 px (the smallest a tap target may
+   be), so that the drawing shows through; on every device tutorial. */
+@container lx-room (max-width: 599px) {
+  .lx-spot { width: 24px; height: 24px; margin: -12px 0 0 -12px; box-shadow: 0 0 0 4px rgba(255, 122, 100, 0.3); }
+  .lx-spot[aria-pressed="true"] { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.35); }
+}
+/* Item 12. In Meet the machine's list, each card's title is a button back to its part on the drawing (linac.js): a
+   small orange cell before it, like the drawing's buttons, level with its first line, and an underline only under the
+   pointer or from the keyboard, in the colour of its part of the page, as the jump links of Books & Guidelines and
+   Standards in Medicine (Ali's choice B: "they are just jump links in site"). */
+.lx-goto { display: inline-flex; align-items: flex-start; gap: 10px; min-height: 24px; padding: 0; border: 0; background: none;
+  font: inherit; color: inherit; text-align: start; cursor: pointer; }
+.lx-goto::before { content: ""; flex: none; width: 12px; height: 12px; margin-top: 0.25em; border-radius: 50%;
+  background: #FF7A64; border: 2px solid #FFFFFF; box-shadow: 0 0 0 3px rgba(255, 122, 100, 0.3); }
+.lx-goto:hover::before, .lx-goto:focus-visible::before { box-shadow: 0 0 0 5px rgba(255, 122, 100, 0.45); }
+.lx-goto:hover .lx-goto-t, .lx-goto:focus-visible .lx-goto-t { text-decoration: underline; text-decoration-thickness: 2px;
+  text-underline-offset: 4px; text-decoration-color: var(--link-tone, var(--tone, var(--section-tone, var(--page-tone, var(--ink))))); }
+/* Item 9. The home page: Myth or fact?'s cards at the Quick quiz's width on computers, reckoned as the quiz's is;
+   Repair or replace?, What can this result tell us? and the sort cards keep their widths (Ali: "let's undo the last
+   two"). Phones as before. */
+@media (min-width: 900px) {
+  .activity .myths .cases { max-width: calc((100% + 2 * clamp(20px, 3.4vw, 44px) - 44px) * 6 / 11); }
+}
+/* Item 6. Links to other sites: the mark, a thin arrow, small and low like a subscript, joined to the link's last word
+   (build.py, mark_links), mirrored on right-to-left text; not underlined (a box inside a link takes no underline). On
+   Standards in Medicine an edition's (i) stands right above the mark (Ali's suggestion): its tap area, 26 by 24 px,
+   reaches about 11 px above its line without covering the mark, so each edition with an (i) stands 8 px further from
+   the one above. */
+.ext-tail { white-space: nowrap; }
+.ext-mark { display: inline-block; width: 0.62em; height: 0.62em; margin-inline-start: 0.15em; vertical-align: -0.26em; fill: none;
+  stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.ext-mark:dir(rtl) { transform: scaleX(-1); }
+.where-standards .src-ed .ed-info { top: -11px; translate: none; height: 24px; padding-top: 9px; inset-inline-start: calc(100% - 13.35px); }
+.where-standards .src-row:has(.ed-info) > td { padding-top: 10px; }

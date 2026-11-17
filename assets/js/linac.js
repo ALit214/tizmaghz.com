@@ -5,7 +5,8 @@
    Nothing moves by itself: each change follows a press, a key or a finger, and screen readers hear it, politely,
    through the page's live region (data-announce); with reduced motion nothing glides (site.css).
    - Meet the machine: a button on each part of the room shows that part's text, one at a time (aria-pressed);
-     "Show as a list" shows them all, and "Show the drawing" brings the drawing back.
+     "Show as a list" shows them all, in columns, each title a button back to its part on the drawing (3.04), and
+     "Show the drawing" brings the drawing back.
    - From an electron to a beam: Next and Back go through the seven steps, "Step n of 7", lighting each step's part of
      the drawing and drawing the beam's path so far; at the last step, Start again.
    - Shape the beam: each leaf is a slider. Tab reaches it, and choosing it (the keyboard, a click or a tap) makes it
@@ -72,23 +73,73 @@
   }
 
   // ---------------------------------------------------------------- 2. Meet the machine
+  // (3.04, stage 6, item 12; Ali, 15 November 2026) In the list ("Show as a list"), each card's title is a button that
+  // takes you back to its part on the drawing: the drawing shows again with that part chosen, its button lit, the
+  // drawing in view and the keyboard on that part's button. The titles are buttons only while the list shows (the
+  // style sheet puts a small orange cell before each, like the drawing's buttons); screen readers hear the title,
+  // then a hidden "(on the drawing)" (data-goto), as the tables' names on Books & Guidelines are followed by "(its
+  // card)".
   (function () {
     var box = $('.lx-room');
     if (!box) return;
     var spots = $all('.lx-spot', box);
     var parts = $all('.lx-room-part', box);
     var view = $('[data-lx-view]', box);
+    var hint = box.getAttribute('data-goto') || '';
+    var heads = parts.map(function (li) {
+      var h = $('h3', li), plain = doc.createDocumentFragment();
+      while (h.firstChild) plain.appendChild(h.firstChild);
+      var b = doc.createElement('button'), t = doc.createElement('span'), vh = doc.createElement('span');
+      b.type = 'button';
+      b.className = 'lx-goto';
+      b.setAttribute('data-part', li.getAttribute('data-part'));
+      t.className = 'lx-goto-t';
+      vh.className = 'vh';
+      vh.textContent = ' (' + hint + ')';
+      b.appendChild(t);
+      b.appendChild(vh);
+      return { h: h, plain: plain, b: b, t: t };
+    });
+    function titles(list) {
+      heads.forEach(function (x) {
+        if (list) {
+          while (x.h.firstChild) x.t.appendChild(x.h.firstChild);
+          if (!x.t.firstChild) x.t.appendChild(x.plain);
+          x.h.appendChild(x.b);
+        } else if (x.b.parentNode) {
+          x.h.removeChild(x.b);
+          while (x.t.firstChild) x.h.appendChild(x.t.firstChild);
+        } else if (!x.h.firstChild) {
+          x.h.appendChild(x.plain);
+        }
+      });
+    }
+    titles(false);
     function show(id, say) {
       spots.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-part') === id ? 'true' : 'false'); });
       parts.forEach(function (li) { li.classList.toggle('is-current', li.getAttribute('data-part') === id); });
       if (say) announce(spoken(doc.getElementById('room-' + id)));
     }
-    spots.forEach(function (b) { on(b, 'click', function () { show(b.getAttribute('data-part'), true); }); });
-    on(view, 'click', function () {
-      var list = box.getAttribute('data-view') !== 'list';
+    function setView(list) {
       box.setAttribute('data-view', list ? 'list' : 'drawing');
       view.textContent = view.getAttribute(list ? 'data-drawing' : 'data-list');
+      titles(list);
+    }
+    spots.forEach(function (b) { on(b, 'click', function () { show(b.getAttribute('data-part'), true); }); });
+    on(view, 'click', function () {
+      setView(box.getAttribute('data-view') !== 'list');
       announce(view.textContent);
+    });
+    heads.forEach(function (x) {
+      on(x.b, 'click', function () {
+        var id = x.b.getAttribute('data-part');
+        setView(false);
+        show(id, true);
+        var top = box.getBoundingClientRect().top + (window.pageYOffset || 0) - 96;   // under the top bar
+        try { window.scrollTo({ top: Math.max(0, top), behavior: 'instant' }); } catch (e) { window.scrollTo(0, Math.max(0, top)); }   // a jump, as in the mock-ups
+        var spot = $('.lx-spot[data-part="' + id + '"]', box);
+        if (spot) { try { spot.focus({ preventScroll: true }); } catch (e) { spot.focus(); } }
+      });
     });
   })();
 
@@ -463,67 +514,35 @@
     arrange(FIRST);
   })();
 
-  // ---------------------------------------------------------------- 8. Who does what: the cards in one size
-  // (Ali's idea, 4 November 2026) Where the cards stand side by side, they all take one height: the tallest of the
-  // others' when one card is much longer (more than a third above the middle height); that card shows its first
-  // lines and "Show more" (aria-expanded), which opens it in place, and "Show less" closes it again. On phones (one
-  // column) every card shows all of its text, as it does without the script.
+  // ---------------------------------------------------------------- 8. Who does what
+  // (3.04, stage 6, Ali's choice B of 15 November 2026) Each card is as tall as its text, the cards in columns (at most
+  // three), in the style sheet alone: nothing to do here any more, and no "Show more". The same for part 6 of Inside a
+  // LINAC, Many ways to treat.
+
+  // ---------------------------------------------------------------- A short window (3.04, stage 6, item 11)
+  // (Ali's choice B, 15 November 2026) The third part's drawing, which stays in view beside its steps on computers,
+  // never has its bottom cut off: first it sits closer to the top bar (76 px tall) than its usual 112 px from the top,
+  // never under the bar (10 px below it at the closest); only where that is not enough (below about 550 px of window
+  // height at 1,280 px wide, 610 px from 1,440 px) does every activity drawing of the page shrink together, keeping its
+  // 4:3 shape, as they share one frame (Ali's rule of 3 November 2026; --lx-fit in the style sheet). Set when the page
+  // opens and again if the window is resized, never while scrolling.
   (function () {
-    var grid = $('.lx-roles');
-    if (!grid || !window.getComputedStyle) return;
-    var cards = $all('.lx-role', grid);
-    var timer = null;
-    function even() {
-      cards.forEach(function (c) {
-        c.style.height = '';
-        $('p', c).style.maxHeight = '';
-        c.classList.remove('is-clamped');
-        if (!c.classList.contains('is-open')) $('.lx-more', c).hidden = true;
-      });
-      grid.classList.remove('is-even');
-      if (getComputedStyle(grid).gridTemplateColumns.split(' ').length < 2) {   // one column: every card in full
-        cards.forEach(function (c) {
-          var b = $('.lx-more', c);
-          c.classList.remove('is-open');
-          b.hidden = true;
-          b.setAttribute('aria-expanded', 'false');
-          $('[data-more]', b).hidden = false;
-          $('[data-less]', b).hidden = true;
-        });
-        return;
-      }
-      grid.classList.add('is-even');
-      var hs = cards.map(function (c) { return c.getBoundingClientRect().height; });
-      var sorted = hs.slice().sort(function (a, b) { return a - b; });
-      var mid = (sorted[(sorted.length - 1) >> 1] + sorted[sorted.length >> 1]) / 2;
-      var h = 0;
-      hs.forEach(function (x) { if (x <= mid * 4 / 3 && x > h) h = x; });
-      cards.forEach(function (c, k) {
-        if (c.classList.contains('is-open')) return;
-        if (hs[k] > h + 1) {
-          var p = $('p', c), b = $('.lx-more', c);
-          b.hidden = false;
-          var rest = c.getBoundingClientRect().height - p.getBoundingClientRect().height;   // the card without its text
-          p.style.maxHeight = Math.max(48, Math.floor(h - rest)) + 'px';
-          c.classList.add('is-clamped');
-        }
-        c.style.height = Math.ceil(h) + 'px';
-      });
+    var pic = $('.lx-journey-pic');
+    if (!pic || !window.matchMedia) return;
+    var root = doc.documentElement, BAR = 76, GAP = 10, TOP = 112, timer = null;
+    function fit() {
+      root.style.removeProperty('--lx-stick');
+      root.style.removeProperty('--lx-fit');
+      if (!window.matchMedia('(min-width: 900px)').matches) return;
+      var h = pic.getBoundingClientRect().height, win = window.innerHeight;
+      if (!h || TOP + h <= win) return;
+      var room = win - BAR - GAP;
+      if (h <= room) { root.style.setProperty('--lx-stick', Math.floor(win - h) + 'px'); return; }
+      root.style.setProperty('--lx-stick', (BAR + GAP) + 'px');
+      root.style.setProperty('--lx-fit', Math.floor(room * 4 / 3) + 'px');
     }
-    function later() { clearTimeout(timer); timer = setTimeout(even, 120); }
-    $all('.lx-more', grid).forEach(function (b) {
-      on(b, 'click', function () {
-        var c = b.parentNode, open = b.getAttribute('aria-expanded') !== 'true';
-        c.classList.toggle('is-open', open);
-        b.setAttribute('aria-expanded', open ? 'true' : 'false');
-        $('[data-more]', b).hidden = open;
-        $('[data-less]', b).hidden = !open;
-        even();
-      });
-    });
-    even();
-    on(window, 'resize', later);
-    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(even);
+    fit();
+    on(window, 'resize', function () { clearTimeout(timer); timer = setTimeout(fit, 120); });
   })();
 
   // ---------------------------------------------------------------- 7. Safety by design: the pretend door
