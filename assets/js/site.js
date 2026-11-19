@@ -1484,6 +1484,30 @@
     };
   })();
 
+  // (3.05) The hidden game, Tic-Tac-Toe with the cells (assets/js/game.js): no page loads its script at the start.
+  // It is fetched when a quiz ends with a full score and the door shows, or at the latest when the door's button
+  // is pressed; the button then opens the game.
+  var Game = (function () {
+    var asked = false, waiting = [];
+    function fetch(then) {
+      if (window.SiteGame) { if (then) then(); return; }
+      if (then) waiting.push(then);
+      var me = $('script[src$="site.js"]');
+      if (asked || !me || !me.src) return;
+      asked = true;
+      var s = doc.createElement('script');
+      s.src = me.src.replace(/site\.js(\?.*)?$/, 'game.js');
+      s.onload = function () { waiting.splice(0).forEach(function (f) { if (window.SiteGame) f(); }); };
+      s.onerror = function () { asked = false; waiting = []; };
+      doc.head.appendChild(s);
+    }
+    on(doc, 'click', function (ev) {
+      var b = ev.target && ev.target.closest ? ev.target.closest('[data-game-open]') : null;
+      if (b) fetch(function () { window.SiteGame.open(b); });
+    });
+    return { fetch: fetch };
+  })();
+
   // Quick quiz, and since version 3.00 the quiz of Standards in medicine (on its own page): one question at a
   // time, with the answer and its explanation once checked, and the score at the end.
   function Quiz(form) {
@@ -1495,6 +1519,7 @@
     var result = $('[data-quiz-result]', form);
     var score = $('[data-quiz-score]', form);
     var restart = $('[data-quiz-restart]', form);
+    var door = $('[data-game-door]', form);          // (3.05) the hidden game's door, in every quiz (game.js)
     var total = questions.length;
     var current = 0;
     var correct = 0;
@@ -1507,6 +1532,7 @@
       result.hidden = !finished;
       if (finished) {
         score.textContent = fill(T.result, { n: correct, total: total });
+        if (door) { door.hidden = correct !== total; if (!door.hidden) Game.fetch(); }   // it shows only after a full score
         return;
       }
       progress.textContent = fill(T.questionProgress, { n: current + 1, total: total });

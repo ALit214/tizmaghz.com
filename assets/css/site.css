@@ -471,8 +471,18 @@ main:focus, .hero-name:focus { outline: none; }
 .dish-pause[data-state="paused"] .when-paused { display: grid; }
 .dish-pause span { display: grid; place-items: center; }
 
-.strips { height: clamp(110px, 14vw, 200px); margin-top: clamp(20px, 3vw, 36px); overflow: hidden; }
-.strips svg { display: block; width: 100%; height: 100%; }
+.strips { position: relative; height: clamp(110px, 14vw, 200px); margin-top: clamp(20px, 3vw, 36px); overflow: hidden; container: strips / inline-size; }
+/* (3.05) The scaffolds keep their size on wide screens, and the row goes on with more of them (Ali, 18 November 2026).
+   The drawing is 5,120 by 220 units, the first five strips in its middle 1,440. Up to a window of 1,440 px those
+   1,440 units fill the strip's width, as before, and on a phone the drawing is never under half its units, as
+   before; from 1,440 px it keeps its own size (one unit, one pixel), and more strips show on both sides, up to a
+   window of 5,120 px. Up to a strip of 1,440 px only the first five are drawn, as in 3.04 (Ali, 18 November 2026:
+   "only the main 5 scaffolds visible on normal screens, and have the rest shown while we are on a wide screen"). */
+.strips svg {
+  position: absolute; left: 50%; top: 50%; display: block; max-width: none;
+  width: max(2560px, min(100%, 1440px) * 32 / 9); height: auto; aspect-ratio: 5120 / 220; transform: translate(-50%, -50%);
+}
+@container strips (max-width: 1440px) { .strip-more { display: none; } }
 
 .intro-summary {
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 28px 64px;
@@ -1785,6 +1795,11 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
    not the page's teal (the label "General principle" keeps the page's colour, as everywhere) */
 .lx-protection, .lx-iran { --link-tone: var(--violet); }
 .lx-iran { padding: clamp(20px, 3vw, 30px); border: 0; border-radius: 24px; border-top: 6px solid var(--violet); background: var(--paper); }
+/* (3.05) A tutorial's parts take their background by their place (by_place in build.py), so these boxes take the other
+   fill whichever part they stand in (the playbook, section 6: a box shows against its band): white on a gray part,
+   light gray on a white one; in the dark theme the two dark tones, the same way round. */
+.band:not(.band-paper) .lx-stage, .band:not(.band-paper) .lx-role, .band:not(.band-paper) .lx-way { background: var(--paper); }
+.band-paper .lx-door, .band-paper .lx-check, .band-paper .lx-iran { background: var(--bg); }
 .lx-iran p { max-width: 52em; }
 .lx-iran-label { margin: 12px 0 0; }
 .lx-iran .lx-source { margin-top: 20px; }
@@ -2388,3 +2403,104 @@ main.learn .section-head { flex-direction: column; align-items: flex-start; }
 .ext-mark:dir(rtl) { transform: scaleX(-1); }
 .where-standards .src-ed .ed-info { top: -11px; translate: none; height: 24px; padding-top: 9px; inset-inline-start: calc(100% - 13.35px); }
 .where-standards .src-row:has(.ed-info) > td { padding-top: 10px; }
+
+/* ================================================================ version 3.05
+   The quiet drawings in the empty places (assets/js/fill.js; Ali's choices of 18 November 2026). Decoration only:
+   hidden from screen readers, no pointer, no focus. Computers only; on a phone none of them shows. */
+.row-fill, .head-art, .margin-art { display: none; }
+@media (min-width: 900px) {
+  /* a box alone in its row, or a row that is not full: a few cells along a fibre, in the part's colour. It is an item
+     of the row with no size of its own, so no box changes its size. */
+  .row-fill { display: block; position: relative; min-width: 0; min-height: 0; color: var(--tone, var(--violet)); pointer-events: none; user-select: none; }
+  .further .row-fill { color: var(--gold); }       /* "Go further" belongs to Explore & Learn, which is gold */
+  .row-fill .fill-cells { position: absolute; top: 50%; left: 50%; translate: -50% -50%; display: block; width: min(calc(100% - 56px), 500px); height: auto; overflow: visible; opacity: 0.46; }
+  /* Books & Guidelines and Standards in Medicine: the same drawing beside each group's heading (fill.js places it
+     where the words leave room) */
+  .has-head-art { position: relative; }
+  .head-art { display: block; position: absolute; inset-inline-end: 24px; top: 50%; translate: 0 -50%; pointer-events: none; user-select: none; }
+  .head-art .fill-cells { display: block; width: 100%; height: auto; overflow: visible; opacity: 0.46; }
+  [dir="rtl"] .row-fill .fill-cells, [dir="rtl"] .head-art .fill-cells { transform: scaleX(-1); }   /* it reads the way the page reads */
+}
+/* wide screens: the dish's lines in the far margin beside each part's heading; its box is the margin itself, so the
+   lines are cut at the window's edge and at the part's, and never reach the column */
+@media (min-width: 1700px) {
+  .has-margin-art { position: relative; }
+  .margin-art { display: block; position: absolute; top: 0; bottom: 0; inset-inline-end: 0; overflow: hidden; opacity: 0.32; pointer-events: none; user-select: none; }
+  .margin-art svg { display: block; position: absolute; overflow: visible; }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fill-cells { opacity: 0.52; }
+  :root:not([data-theme="light"]) .margin-art { opacity: 0.4; }
+}
+:root[data-theme="dark"] .fill-cells { opacity: 0.52; }
+:root[data-theme="dark"] .margin-art { opacity: 0.4; }
+@media print { .row-fill, .head-art, .margin-art { display: none !important; } }
+
+/* The hidden game's door: a line and a button in a quiz's result, after a full score (site.js shows it). */
+.quiz-door { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line, rgba(101, 39, 217, 0.25)); }
+.quiz-door[hidden] { display: none; }
+.quiz-door p { margin: 0 0 12px; }
+
+/* Tic-Tac-Toe with the cells (assets/js/game.js): its own panel in the middle of the window, over the dimmed page.
+   It follows the theme: all light with the violet in the dish in the light theme, dark in the dark theme. */
+.ttt-back { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 12px; overflow: auto; overscroll-behavior: contain; background: rgba(23, 18, 43, 0.5); }
+.ttt {
+  --t-bg: #FFFFFF; --t-ink: #17122B; --t-strong: #17122B; --t-muted: #4D4565; --t-line: rgba(101, 39, 217, 0.4);
+  --t-btn: #5321B5; --t-btn-ink: #FFFFFF; --t-focus: #6527D9; --t-hover: rgba(101, 39, 217, 0.1); --t-sq: rgba(101, 39, 217, 0.08);
+  --t-x: #17122B; --t-o: #0E8A83; --t-shadow: 0 18px 44px rgba(44, 31, 85, 0.28); --t-glow: drop-shadow(0 6px 18px rgba(101, 39, 217, 0.22));
+  box-sizing: border-box; width: min(420px, 100%); padding: 18px 20px 20px; border-radius: 24px;
+  border: 1px solid var(--t-line); background: linear-gradient(180deg, #FFFFFF 0%, #F6F1FF 100%); color: var(--t-ink);
+  box-shadow: var(--t-shadow); font-family: var(--font-text); font-size: 15px; line-height: 1.6; text-align: start;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .ttt-back { background: rgba(12, 6, 24, 0.72); }
+  :root:not([data-theme="light"]) .ttt {
+    --t-bg: #140B26; --t-ink: #EFE8F8; --t-strong: #FFFFFF; --t-muted: #CFC6E4; --t-line: rgba(230, 195, 106, 0.6);
+    --t-btn: #EFE8F8; --t-btn-ink: #140B26; --t-focus: #E6C36A; --t-hover: rgba(239, 232, 248, 0.14); --t-sq: rgba(239, 232, 248, 0.08);
+    --t-x: #EFE8F8; --t-o: #5ED6C8; --t-shadow: 0 18px 44px rgba(12, 6, 24, 0.45); --t-glow: none; background: var(--t-bg);
+  }
+}
+:root[data-theme="dark"] .ttt-back { background: rgba(12, 6, 24, 0.72); }
+:root[data-theme="dark"] .ttt {
+  --t-bg: #140B26; --t-ink: #EFE8F8; --t-strong: #FFFFFF; --t-muted: #CFC6E4; --t-line: rgba(230, 195, 106, 0.6);
+  --t-btn: #EFE8F8; --t-btn-ink: #140B26; --t-focus: #E6C36A; --t-hover: rgba(239, 232, 248, 0.14); --t-sq: rgba(239, 232, 248, 0.08);
+  --t-x: #EFE8F8; --t-o: #5ED6C8; --t-shadow: 0 18px 44px rgba(12, 6, 24, 0.45); --t-glow: none; background: var(--t-bg);
+}
+.ttt *, .ttt *::before, .ttt *::after { box-sizing: border-box; }
+.ttt-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.ttt-title { margin: 0; font-family: var(--font-display); font-size: 24px; line-height: 1.2; font-weight: 600; color: var(--t-strong); }
+.ttt[dir="rtl"] .ttt-title { font-size: 21px; font-weight: 800; line-height: 1.5; }
+.ttt-word { display: inline-flex; align-items: center; gap: 0.28em; font-size: 1.12em; letter-spacing: 0.01em; white-space: nowrap; }
+.ttt[dir="rtl"] .ttt-word { letter-spacing: 0; }
+.ttt-mk { width: 0.62em; height: 0.62em; flex: none; }
+.ttt-mk-x { color: var(--t-x); }
+/* (Ali, 18 November 2026) the ring in the name takes the colour of the page the game was opened from: the page's own
+   colour (--page-tone, as its keyboard ring has), the site's violet on the home page, which has none */
+.ttt-mk-o { color: var(--page-tone, var(--violet)); }
+.ttt-sub { display: block; margin-top: 1px; font-family: var(--font-text); font-size: 13.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--t-muted); }
+.ttt[dir="rtl"] .ttt-sub { font-weight: 600; line-height: 1.4; letter-spacing: 0; }
+.ttt-intro { margin: 6px 0 0; color: var(--t-muted); }
+.ttt-bowl { position: relative; width: 100%; max-width: 340px; aspect-ratio: 1 / 1; margin: 14px auto 0; }
+.ttt-bowl canvas { display: block; width: 100%; height: 100%; filter: var(--t-glow); }
+/* the board is a thing, not text: it is never mirrored */
+/* (stage 2, Ali, 18 November 2026: "the mark doesn't sit right in the keyboard ring") the squares follow the drawing:
+   three cells of 124 of the dish's 600 units, from 114 to 486, each centred on its mark (game.js: 176, 300, 424) and
+   bounded by the board's lines (238, 362) */
+.ttt-grid { position: absolute; inset: 19%; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); direction: ltr; }
+.ttt-sq { appearance: none; margin: 4.435%; padding: 0; border: 0; border-radius: 14px; background: transparent; cursor: pointer; }
+.ttt-sq[aria-disabled="true"] { cursor: default; }
+.ttt-sq[aria-disabled="false"]:hover { background: var(--t-sq); }
+.ttt-sq:focus-visible, .ttt-btn:focus-visible, .ttt-x:focus-visible { outline: 3px solid var(--t-focus); outline-offset: 2px; }
+/* (stage 2, Ali, 18 November 2026: "the keyboard cell box is overlapping the table") a square's ring is drawn inside
+   its own edge, and the square stands 7 of the dish's units in from its cell (above), so the ring never reaches the
+   board's lines and goes round its mark */
+.ttt-sq:focus-visible { outline-offset: -3px; }
+.ttt-status { margin: 12px 0 0; min-height: 1.6em; font-weight: 700; text-align: center; color: var(--t-strong); }
+.ttt-note { margin: 2px 0 0; min-height: 3.2em; text-align: center; color: var(--t-muted); font-size: 14px; }
+.ttt-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
+.ttt-btn { appearance: none; min-height: 44px; padding: 8px 20px; border-radius: 999px; border: 1.5px solid var(--t-btn); background: transparent; color: var(--t-btn); font: inherit; font-weight: 600; cursor: pointer; }
+.ttt-btn-solid { background: var(--t-btn); color: var(--t-btn-ink); }
+.ttt-btn:hover { background: var(--t-hover); }
+.ttt-btn-solid:hover { background: var(--t-btn); filter: brightness(1.12); }
+.ttt-x { appearance: none; flex: none; width: 44px; height: 44px; margin: -6px; margin-inline-start: 0; border: 0; border-radius: 50%; background: transparent; color: var(--t-ink); font-size: 18px; cursor: pointer; }
+.ttt-x:hover { background: var(--t-hover); }
